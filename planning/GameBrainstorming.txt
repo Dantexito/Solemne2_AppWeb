@@ -2,6 +2,7 @@
 GAME BASICS
 
 - 6x6 starting grid
+- 1 turn 1 die
 - After 3 rounds passed a boss will trigger
 - Increase grid to 9x9 or more while advancing
 - Dice types, random die, numbered die, boosted die, 20 faced die, special die.
