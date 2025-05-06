@@ -8,7 +8,7 @@ export const useGameStore = defineStore('game', {
     coins: 0,
     playerPosition: 0,
     goal: 10,
-    tiles: Array.from({ length: 20 }, (_, i) => ({
+    tiles: Array.from({ length: 25 }, (_, i) => ({
       id: i,
       reward: Math.floor(Math.random() * 3), // 0 a 2 monedas
     })),
