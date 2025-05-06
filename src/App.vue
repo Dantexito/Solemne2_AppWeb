@@ -1,3 +1,20 @@
+<script setup>
+import { onMounted } from "vue";
+import { useGameStore } from "./stores/game";
+import GameBoard from "./components/GameBoard.vue";
+import GameInfo from "./components/GameInfo.vue";
+
+const gameStore = useGameStore();
+
+onMounted(() => {
+  gameStore.generateBoard()
+});
+
+function handleRollDice() {
+  gameStore.roll()
+}
+</script>
+
 <template>
   <div>
     <header>

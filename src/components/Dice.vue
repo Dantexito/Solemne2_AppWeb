@@ -7,7 +7,7 @@
   const store = useGameStore()
   
   function roll() {
-    store.rollDice()
+    gameStore.roll()
   }
   </script>
   

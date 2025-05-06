@@ -1,70 +1,102 @@
 <template>
-    <div class="board">
+<div class="board">
+    <div
+        v-for="(cell, index) in totalCells"
+        :key="index"
+        class="cell"
+      >
       <Tile
-        v-for="(tile, i) in store.tiles"
-        :key="tile.id"
-        :tile="tile"
-        :is-player="tile.id === store.playerPosition"
-        :class="`pos-${i}`"
-      />
+  v-if="isPerimeter(index) && game.boardSquares[perimeterIndex(index)]"
+  :tile="game.boardSquares[perimeterIndex(index)]"
+  :is-player="perimeterIndex(index) === game.playerPosition"
+/>
+
+        <div v-else class="empty"></div>
+      </div>
+  
+      <div class="center-info">
+        <GameInfo />
+      </div>
     </div>
   </template>
   
   <script setup>
+  import { computed } from 'vue'
   import { useGameStore } from '@/stores/game'
   import Tile from './Tile.vue'
+  import GameInfo from './GameInfo.vue'
   
-  const store = useGameStore()
+  const game = useGameStore()
+  
+  const gridSize = computed(() => game.boardRows) // 6 o 9
+  const totalCells = computed(() => gridSize.value * gridSize.value)
+  
+  // Generar un array con las posiciones del borde
+  const perimeterPositions = computed(() => {
+    const size = gridSize.value
+    const positions = []
+  
+    for (let col = 0; col < size; col++) positions.push(col) // fila arriba
+    for (let row = 1; row < size - 1; row++) positions.push(row * size + size - 1) // columna derecha
+    for (let col = size - 1; col >= 0; col--) positions.push((size - 1) * size + col) // fila abajo
+    for (let row = size - 2; row > 0; row--) positions.push(row * size) // columna izquierda
+  
+    return positions
+  })
+  
+  // Saber si una celda en la grilla es parte del borde
+  function isPerimeter(index) {
+    return perimeterPositions.value.includes(index)
+  }
+  
+  // Obtener el índice dentro de boardSquares para esa posición de borde
+  function perimeterIndex(index) {
+    return perimeterPositions.value.indexOf(index)
+  }
   </script>
   
   <style scoped>
   .board {
-    position: relative;
-    width: 364px;
-    height: 363px;
+    display: grid;
+    gap: 2px;
     margin: auto;
-    background-color: #f5f5f5;
+    position: relative;
+  }
+  
+  .cell {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .board {
+    /* Se ajusta dinámicamente a 6x6 o 9x9 */
+    grid-template-columns: repeat(auto-fit, 60px);
+    grid-auto-rows: 60px;
+    background-color: #ddd;
+    padding: 10px;
     border: 4px solid #222;
   }
   
-  .tile {
-    position: absolute;
-    width: 60px;
-    height: 60px;
-    background-color: #fff;
-    border: 2px solid #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  .empty {
+    background-color: transparent;
   }
   
-  /* === Posiciones tipo Monopoly (19 casillas) === */
-  /* Lado superior (0–5) */
-  .pos-0 { top: 0; left: 0; }
-  .pos-1 { top: 0; left: 60px; }
-  .pos-2 { top: 0; left: 120px; }
-  .pos-3 { top: 0; left: 180px; }
-  .pos-4 { top: 0; left: 240px; }
-  .pos-5 { top: 0; right: 0; }
-  
-  /* Lado derecho (6–9) */
-  .pos-6 { top: 61.5px; right: 0; }
-  .pos-7 { top: 120px; right: 0; }
-  .pos-8 { top: 180px; right: 0; }
-  .pos-9 { top: 240px; right: 0; }
-  
-  /* Lado inferior (10–14) */  
-  .pos-10 { bottom: 0; right: 0; }
-  .pos-11 { bottom: 0; left: 239.5px; }
-  .pos-12 { bottom: 0; left: 180px; }
-  .pos-13 { bottom: 0; left: 120px; }
-  .pos-14 { bottom: 0; left: 60px; }
-  .pos-15 { bottom: 0; left: 0; }
-  
-  /* Lado izquierdo (15–18) */
-  .pos-16 { top: 60px; left: 0; }
-  .pos-17 { top: 120px; left: 0; }
-  .pos-18 { top: 180px; left: 0; }
-  .pos-19 { top: 240px; left: 0; }
+  /* Info al centro */
+  .center-info {
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    background-color: rgba(255, 255, 255, 0.96);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 0 5px #0003;
+    pointer-events: none;
+  }
   </style>
   
