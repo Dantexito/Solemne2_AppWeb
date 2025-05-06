@@ -3,16 +3,30 @@ import { storeToRefs } from "pinia";
 import { useGameStore } from "../stores/game";
 
 const gameStore = useGameStore();
-// storeToRefs to keep reactivity
-const { playerPosition, playerMoney, lastDiceRoll } = storeToRefs(gameStore);
+const {
+  playerPosition,
+  playerMoney,
+  lastDiceRoll,
+  playerLap,
+  playerStage,
+  gameMessage,
+  currentStageConfig,
+} = storeToRefs(gameStore);
 </script>
 
 <template>
   <div class="game-info">
+    <h3>
+      Stage: {{ playerStage }} | Lap: {{ playerLap }} /
+      {{ currentStageConfig?.lapsToComplete || 3 }}
+    </h3>
     <p>Position: {{ playerPosition }}</p>
     <p>Money: ${{ playerMoney }}</p>
     <p v-if="lastDiceRoll !== null">Last Roll: {{ lastDiceRoll }}</p>
-    <p v-else>Roll the die!</p>
+    <hr />
+    <p>
+      <strong>{{ gameMessage }}</strong>
+    </p>
   </div>
 </template>
 
@@ -22,8 +36,18 @@ const { playerPosition, playerMoney, lastDiceRoll } = storeToRefs(gameStore);
   border: 1px solid #ccc;
   margin-bottom: 10px;
   background-color: #f9f9f9;
+  min-width: 300px; /* Give it some more space */
+  text-align: center;
 }
 p {
   margin: 5px 0;
+}
+h3 {
+  margin-top: 0;
+}
+hr {
+  margin: 10px 0;
+  border: 0;
+  border-top: 1px solid #eee;
 }
 </style>

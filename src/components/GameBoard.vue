@@ -10,8 +10,7 @@ const { totalBoardSquares, boardRows, boardCols, playerPosition } = storeToRefs(
 
 // Array of square IDs [0, 1, ..., 19]
 const squareIds = computed(() => {
-  // Ensure totalBoardSquares is calculated correctly before creating array
-  const count = totalBoardSquares.value;
+  const count = totalBoardSquares.value; // totalBoardSquares is already a reactive getter
   return count > 0 ? Array.from({ length: count }, (_, i) => i) : [];
 });
 

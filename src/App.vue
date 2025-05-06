@@ -7,7 +7,7 @@ import GameInfo from "./components/GameInfo.vue";
 const gameStore = useGameStore();
 
 onMounted(() => {
-  gameStore.setupBoard();
+  gameStore.initializeGame(); // Changed to initializeGame
 });
 
 function handleRollDice() {
@@ -17,16 +17,12 @@ function handleRollDice() {
 
 <template>
   <div id="game-container">
-    <h1>Perimeter Dice Game</h1>
-
+    <h1>Dice Perimeter Quest</h1>
     <div class="game-layout">
       <GameInfo class="game-info-area" />
-
       <GameBoard class="game-board-area" />
-
       <div class="dice-control-area">
-        <button @click="handleRollDice">Roll Die</button>
-        <p v-if="gameStore.lastDiceRoll !== null">Rolled: {{ gameStore.lastDiceRoll }}</p>
+        <button @click="handleRollDice" :disabled="gameStore.isGameOver">Roll Die</button>
       </div>
     </div>
   </div>
@@ -49,10 +45,11 @@ function handleRollDice() {
 }
 
 .game-info-area {
+  /* Style from previous response is fine */
   border: 1px dashed grey;
   padding: 15px;
-  margin-bottom: 15px; /* Space between info and board */
-  min-width: 200px; /* Give it some size */
+  margin-bottom: 15px;
+  min-width: 300px;
   text-align: center;
   background-color: rgba(255, 255, 240, 0.85);
 }
@@ -62,7 +59,7 @@ function handleRollDice() {
 }
 
 .dice-control-area {
-  margin-top: 20px; /* Space below board */
+  margin-top: 20px;
   text-align: center;
 }
 
@@ -70,5 +67,9 @@ button {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 </style>
