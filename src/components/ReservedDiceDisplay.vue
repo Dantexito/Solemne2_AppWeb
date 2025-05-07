@@ -1,21 +1,14 @@
 <script setup>
 import { useGameStore } from "../stores/game";
 import { storeToRefs } from "pinia";
+import SingleDieDisplay from "./SingleDieDisplay.vue"; // Import new component
 
 const gameStore = useGameStore();
 const { reservedDice, gamePhase, isGameOver } = storeToRefs(gameStore);
 
-function getDieLabel(die) {
-  let label = die.type;
-  if (die.value !== undefined) {
-    label += ` (${die.value})`;
-  }
-  return label;
-}
-
 function useReservedDie(index) {
   if (gameStore.gamePhase === "rolling" && !gameStore.isGameOver) {
-    gameStore.rollDice(index); // Pass index to rollDice action
+    gameStore.rollDice(index);
   }
 }
 </script>
@@ -23,46 +16,40 @@ function useReservedDie(index) {
 <template>
   <div class="reserved-dice-container">
     <h3>Dice in Reserve</h3>
-    <p v-if="reservedDice.length === 0">None</p>
-    <ul>
-      <li v-for="(die, index) in reservedDice" :key="index">
-        <button
-          @click="useReservedDie(index)"
-          :disabled="isGameOver || gamePhase !== 'rolling'"
-          class="die-button"
-        >
-          {{ getDieLabel(die) }}
-        </button>
-      </li>
-    </ul>
+    <p v-if="reservedDice.length === 0" class="no-dice-text">None</p>
+    <div class="dice-grid">
+      <SingleDieDisplay
+        v-for="(die, index) in reservedDice"
+        :key="index"
+        :die="die"
+        @use-die="useReservedDie(index)"
+      />
+    </div>
   </div>
 </template>
 
 <style scoped>
 .reserved-dice-container {
   text-align: center;
+  background-color: #f8f8f0;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
 }
-ul {
-  list-style-type: none;
-  padding: 0;
+.dice-grid {
+  display: flex;
+  flex-wrap: wrap; /* Allow dice to wrap if many */
+  gap: 10px; /* Space between dice */
+  justify-content: center; /* Center dice if they don't fill width */
 }
-li {
-  margin-bottom: 8px;
-}
-.die-button {
-  padding: 8px 12px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  width: 100%;
-}
-.die-button:disabled {
-  background-color: #aaa;
-  cursor: not-allowed;
+.no-dice-text {
+  font-style: italic;
+  color: #777;
 }
 h3 {
   margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+  color: #444;
 }
 </style>

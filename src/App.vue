@@ -27,7 +27,7 @@ function handleChoice(option) {
 
 <template>
   <div id="game-container">
-    <h1>Dice Perimeter Quest (Layout V3 Fixed)</h1>
+    <h1>Dice or Die</h1>
 
     <div class="main-game-area">
       <div class="board-with-info-overlay">

@@ -372,6 +372,7 @@ export const useGameStore = defineStore("game", {
 
       const square = this.boardSquares[this.playerPosition];
       let landingMessage = ` Landed on square ${square.id} (${square.baseType}, effect: ${square.currentEffectType}).`;
+      // console.log(`Landed on square ${square.id}, base: ${square.baseType}, effect: ${square.currentEffectType}`); // Already have a good gameMessage
 
       // Base type effects (fixed effects)
       if (square.baseType === "corner_br") {
@@ -390,61 +391,99 @@ export const useGameStore = defineStore("game", {
           const hugeGain = square.effectDetails?.amount || this.currentHugeMoneyValue;
           this.playerMoney += hugeGain;
           landingMessage += ` Huge Money! +$${hugeGain}.`;
-          this.boardSquares[this.playerPosition].currentEffectType = "none"; // Mark as collected
+          this.boardSquares[this.playerPosition].currentEffectType = "none";
           this.boardSquares[this.playerPosition].effectDetails = null;
           break;
-        case "choice_dice_money":
+
+        case "choice_dice_money": // Offer money OR one specific, randomly determined die
           this.gamePhase = "awaiting_choice";
+          let offeredDieInChoice;
+          const randDieChoice = Math.random();
+          if (randDieChoice < 0.6) {
+            offeredDieInChoice = { type: DICE_TYPES.FIXED, value: getRandomInt(2, 6) };
+          } else if (randDieChoice < 0.85) {
+            offeredDieInChoice = { type: DICE_TYPES.REVERSE_RANDOM };
+          } else {
+            offeredDieInChoice = { type: DICE_TYPES.D20 };
+          }
           this.choiceDetails = {
             type: "dice_vs_money",
-            message: "Choose your reward: Bonus Money or a Special Die?",
+            message: "Choose your reward:",
             options: [
               {
-                text: `Get $${5 * this.playerStage}`,
+                text: `Get $${10 * this.playerStage}`,
                 action: "get_money_bonus",
-                value: 5 * this.playerStage,
+                value: 10 * this.playerStage,
+                visual: { type: "money" },
               },
               {
-                text: "Get a Fixed-3 Die",
-                action: "get_fixed_die",
-                value: { type: DICE_TYPES.FIXED, value: 3 },
+                text: `Get a ${offeredDieInChoice.type}${
+                  offeredDieInChoice.value ? " (" + offeredDieInChoice.value + ")" : ""
+                } Die`,
+                action: "get_chosen_die",
+                value: offeredDieInChoice,
+                visual: { type: "die", dieData: offeredDieInChoice },
               },
             ],
           };
-          this.gameMessage = this.choiceDetails.message;
+          landingMessage += " " + this.choiceDetails.message;
           break;
-        case "choice_pick_die":
+
+        case "choice_pick_die": // Offer 3 to 4 unique dice
           this.gamePhase = "awaiting_choice";
-          // Pre-generate 3-4 random dice options
-          const diceOptions = [];
-          const possibleDice = [
-            { type: DICE_TYPES.FIXED, value: getRandomInt(2, 6) },
+          const dicePool = [
+            // Create a diverse pool of potential dice
+            { type: DICE_TYPES.FIXED, value: 1 },
+            { type: DICE_TYPES.FIXED, value: 2 },
+            { type: DICE_TYPES.FIXED, value: 3 },
+            { type: DICE_TYPES.FIXED, value: 4 },
+            { type: DICE_TYPES.FIXED, value: 5 },
+            { type: DICE_TYPES.FIXED, value: 6 },
             { type: DICE_TYPES.D20 },
             { type: DICE_TYPES.REVERSE_RANDOM },
-            { type: DICE_TYPES.FIXED, value: getRandomInt(1, 3) },
+            { type: DICE_TYPES.REVERSE_FIXED, value: getRandomInt(1, 3) },
+            { type: DICE_TYPES.NORMAL }, // A chance to get another normal die
+            // Add more potential dice types/values to the pool if desired
           ];
-          shuffleArray(possibleDice);
-          for (let i = 0; i < getRandomInt(2, 3); i++) {
-            // offer 2 or 3 dice
-            diceOptions.push({
-              text: `Die: ${possibleDice[i].type}${
-                possibleDice[i].value ? " (" + possibleDice[i].value + ")" : ""
-              }`,
-              action: "get_chosen_die",
-              value: possibleDice[i],
-            });
+          shuffleArray(dicePool); // Shuffle the pool
+
+          const numDiceToOffer = getRandomInt(3, 4);
+          const finalDiceOptions = [];
+          const offeredSignatures = new Set(); // To track uniqueness
+
+          for (const die of dicePool) {
+            if (finalDiceOptions.length >= numDiceToOffer) break;
+
+            let signature = die.type;
+            // For fixed dice, value matters for uniqueness
+            if (die.type === DICE_TYPES.FIXED || die.type === DICE_TYPES.REVERSE_FIXED) {
+              signature += `_${die.value}`;
+            }
+
+            if (!offeredSignatures.has(signature)) {
+              finalDiceOptions.push({
+                text: `Die: ${die.type}${die.value !== undefined ? " (" + die.value + ")" : ""}`,
+                action: "get_chosen_die",
+                value: { ...die }, // Clone the die object
+                visual: { type: "die", dieData: { ...die } }, // Add visual cue
+              });
+              offeredSignatures.add(signature);
+            }
           }
+
           this.choiceDetails = {
             type: "pick_a_die",
-            message: "Choose a die to keep:",
-            options: diceOptions,
+            message: `Choose a die to keep (${finalDiceOptions.length} options):`,
+            options: finalDiceOptions,
           };
-          this.gameMessage = this.choiceDetails.message;
+          landingMessage += " " + this.choiceDetails.message;
           break;
       }
+      // Update the main game message *after* all specific landing messages are composed
+      this.gameMessage = landingMessage.trim();
 
-      // If no choice is pending, go back to rolling state
       if (this.gamePhase === "landed") {
+        // If no choice was triggered
         this.gamePhase = "rolling";
       }
     },
