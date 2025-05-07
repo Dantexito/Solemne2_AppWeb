@@ -72,6 +72,7 @@ export const useGameStore = defineStore("game", {
     // Dice State
     lastDiceRoll: null, // Can be an object { value: number, type: string }
     reservedDice: [], // Array of Dice Objects e.g., { type: DICE_TYPES.FIXED, value: 5 }
+    maxDiceInBag: MAX_RESERVED_DICE,
 
     // Board State
     boardSquares: [], // Array of { id: number, baseType: string, currentEffectType: string, isTempBad: boolean, effectDetails: any }
@@ -126,6 +127,10 @@ export const useGameStore = defineStore("game", {
     },
     currentHugeMoneyValue(state) {
       return HUGE_MONEY_AMOUNT_BASE * state.playerStage;
+    },
+
+    diceBagCapacityDisplay(state) {
+      return `${state.reservedDice.length}/${state.maxDiceInBag}`;
     },
   },
 
@@ -259,7 +264,7 @@ export const useGameStore = defineStore("game", {
     // --- Dice & Movement ---
     addReservedDie(dieData) {
       // MODIFY ON TOP RESERVED MAXIMUM
-      if (this.reservedDice.length < MAX_RESERVED_DICE) {
+      if (this.reservedDice.length < this.maxDiceInBag) {
         this.reservedDice.push(dieData);
         this.gameMessage = `Gained a ${dieData.type} die!`;
       } else {
