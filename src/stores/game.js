@@ -28,6 +28,7 @@ const STAGE_CONFIGS = {
     bossName: "The Final Audit",
   },
 };
+const MAX_RESERVED_DICE = 10;
 const MAX_STAGES = Object.keys(STAGE_CONFIGS).length;
 const HUGE_MONEY_AMOUNT_BASE = 10; // Base for huge money square, will be multiplied by stage
 
@@ -257,8 +258,8 @@ export const useGameStore = defineStore("game", {
 
     // --- Dice & Movement ---
     addReservedDie(dieData) {
-      // Max 3-4 reserved dice example
-      if (this.reservedDice.length < 4) {
+      // MODIFY ON TOP RESERVED MAXIMUM
+      if (this.reservedDice.length < MAX_RESERVED_DICE) {
         this.reservedDice.push(dieData);
         this.gameMessage = `Gained a ${dieData.type} die!`;
       } else {

@@ -15,7 +15,7 @@ function useReservedDie(index) {
 
 <template>
   <div class="reserved-dice-container">
-    <h3>Dice in Reserve</h3>
+    <h3>Dice in Bag</h3>
     <p v-if="reservedDice.length === 0" class="no-dice-text">None</p>
     <div class="dice-grid">
       <SingleDieDisplay
