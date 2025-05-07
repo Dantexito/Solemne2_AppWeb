@@ -1,65 +1,146 @@
 // src/stores/game.js
 import { defineStore } from "pinia";
 
-// Define board configurations for each stage
+// --- Configuration ---
 const STAGE_CONFIGS = {
-  1: { rows: 6, cols: 6, moneyMultiplier: 1, lapsToComplete: 3, bossName: "Tax Collector" },
-  2: { rows: 9, cols: 9, moneyMultiplier: 1.5, lapsToComplete: 3, bossName: "Greedy Goblin King" },
-  3: { rows: 12, cols: 12, moneyMultiplier: 2, lapsToComplete: 3, bossName: "The Final Audit" },
-  // Add more stages if needed
+  1: {
+    rows: 6,
+    cols: 6,
+    moneyMultiplier: 1,
+    lapsToComplete: 3,
+    maxBadSquares: 2,
+    bossName: "Tax Collector",
+  },
+  2: {
+    rows: 9,
+    cols: 9,
+    moneyMultiplier: 1.5,
+    lapsToComplete: 3,
+    maxBadSquares: 4,
+    bossName: "Greedy Goblin King",
+  },
+  3: {
+    rows: 12,
+    cols: 12,
+    moneyMultiplier: 2,
+    lapsToComplete: 3,
+    maxBadSquares: 6,
+    bossName: "The Final Audit",
+  },
 };
 const MAX_STAGES = Object.keys(STAGE_CONFIGS).length;
+const HUGE_MONEY_AMOUNT_BASE = 10; // Base for huge money square, will be multiplied by stage
+
+// Dice Types (can be expanded)
+export const DICE_TYPES = {
+  NORMAL: "normal", // 1-6
+  FIXED: "fixed", // All faces same number
+  D20: "d20", // 1-20
+  REVERSE_FIXED: "reverse_fixed",
+  REVERSE_RANDOM: "reverse_random",
+};
+
+// --- Helper Functions ---
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Fisher-Yates Shuffle
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
 
 export const useGameStore = defineStore("game", {
   state: () => ({
-    boardRows: 6, // Will be updated by stage
-    boardCols: 6, // Will be updated by stage
+    // Board Config (will be set by currentStageConfig)
+    boardRows: 0,
+    boardCols: 0,
+
+    // Player State
     playerPosition: 0,
     playerMoney: 0,
-    lastDiceRoll: null,
     playerLap: 1,
     playerStage: 1,
-    boardSquares: [], // Now an array of square objects {id, type}
+
+    // Dice State
+    lastDiceRoll: null, // Can be an object { value: number, type: string }
+    reservedDice: [], // Array of Dice Objects e.g., { type: DICE_TYPES.FIXED, value: 5 }
+
+    // Board State
+    boardSquares: [], // Array of { id: number, baseType: string, currentEffectType: string, isTempBad: boolean, effectDetails: any }
+
+    // Game Flow State
     gameMessage: "Roll the die to start!",
     isGameOver: false,
+    gamePhase: "rolling", // 'rolling', 'moving', 'landed', 'awaiting_choice', 'boss_encounter'
+    choiceDetails: null, // For when player needs to make a choice
   }),
 
   getters: {
     currentStageConfig(state) {
-      return STAGE_CONFIGS[state.playerStage];
+      return STAGE_CONFIGS[state.playerStage] || STAGE_CONFIGS[1]; // Fallback to stage 1
     },
     totalBoardSquares(state) {
       const config = this.currentStageConfig;
-      if (!config) return 0;
+      if (!config || !config.rows || !config.cols) return 0;
       const R = config.rows;
       const C = config.cols;
       if (R <= 1 || C <= 1) return R * C;
       return 2 * R + 2 * C - 4;
     },
-    // Calculates the ID of the bottom-right corner based on current config and path
-    // Path: Down -> Right -> Up -> Left
-    // Left Col (0 to R-1), Bottom Row (R to R+C-2)
-    // So, the last square of the bottom row is R + C - 2
-    bottomRightCornerId(state) {
+    // Corner IDs for the current board configuration (Path: Down -> Right -> Up -> Left)
+    cornerSquareIds(state) {
       const config = this.currentStageConfig;
-      if (!config) return -1; // Should not happen if stage is valid
-      return config.rows + config.cols - 2;
+      if (!config || !config.rows || !config.cols || config.rows <= 1 || config.cols <= 1)
+        return [];
+      const R = config.rows;
+      const C = config.cols;
+      return [
+        0, // Top-Left (Start)
+        R - 1, // Bottom-Left
+        R - 1 + (C - 1), // Bottom-Right
+        R - 1 + (C - 1) + (R - 1), // Top-Right
+      ];
+    },
+    bottomRightCornerId(state) {
+      // Specifically the one for bad effect
+      const config = this.currentStageConfig;
+      if (!config || !config.rows || !config.cols || config.rows <= 1 || config.cols <= 1)
+        return -1;
+      return config.rows - 1 + (config.cols - 1);
+    },
+    // Squares that are not corners and not the start square, candidates for random effects
+    candidateSquareIds(state) {
+      if (!state.boardSquares.length) return [];
+      const corners = this.cornerSquareIds;
+      return state.boardSquares
+        .filter((sq) => sq.baseType === "normal" && !corners.includes(sq.id))
+        .map((sq) => sq.id);
+    },
+    currentHugeMoneyValue(state) {
+      return HUGE_MONEY_AMOUNT_BASE * state.playerStage;
     },
   },
 
   actions: {
+    // --- Game Flow & Setup ---
     initializeGame() {
       this.playerStage = 1;
       this.isGameOver = false;
-      this.gameMessage = "Roll the die to start!";
+      this.reservedDice = []; // Clear reserved dice
       this.setupStage();
     },
 
     setupStage() {
       const config = this.currentStageConfig;
       if (!config) {
-        console.error("Invalid stage:", this.playerStage);
-        this.gameMessage = "Error: Invalid stage configuration!";
+        this.gameMessage = "Error: Invalid stage!";
         this.isGameOver = true;
         return;
       }
@@ -68,115 +149,355 @@ export const useGameStore = defineStore("game", {
       this.boardCols = config.cols;
       this.playerLap = 1;
       this.playerPosition = 0;
-      this.playerMoney = this.playerStage > 1 ? this.playerMoney : 0; // Keep money between stages or reset for first
+      // Reset money only if it's the very first stage, otherwise keep it
+      this.playerMoney = this.playerStage === 1 && this.playerLap === 1 ? 0 : this.playerMoney;
       this.lastDiceRoll = null;
-      this.generateBoardLayout();
+      this.gamePhase = "rolling";
+
+      this.generateBoardLayout(); // Defines baseTypes
+      this.setupLapEffects(); // Adds temporary bad squares and random good squares for the lap
+
       this.gameMessage = `Stage ${this.playerStage} - Lap ${this.playerLap}/${config.lapsToComplete}. Roll the die!`;
-      console.log(`Stage ${this.playerStage} setup with ${this.totalBoardSquares} squares.`);
     },
 
     generateBoardLayout() {
       const config = this.currentStageConfig;
       const totalSquares = this.totalBoardSquares;
-      const brCornerId = this.bottomRightCornerId;
+      const corners = this.cornerSquareIds;
+      const brCornerId = this.bottomRightCornerId; // This is one of the corners
+
       const newLayout = [];
-
       for (let i = 0; i < totalSquares; i++) {
-        let squareType = "normal";
+        let baseType = "normal";
         if (i === 0) {
-          squareType = "start";
+          baseType = "start";
+        } else if (i === corners[1]) {
+          // Bottom-Left
+          baseType = "corner_bl";
         } else if (i === brCornerId) {
-          squareType = "corner_br_bad";
+          // Bottom-Right
+          baseType = "corner_br"; // Specific for the bad effect rule
+        } else if (i === corners[3]) {
+          // Top-Right
+          baseType = "corner_tr";
         }
-        // Add more logic for other corner types or boosters here
-        // e.g., other corners:
-        // const topLeftCornerId = 0; (already 'start')
-        // const topRightCornerId = config.cols -1 ; // if path was right first
-        // const bottomLeftCornerId = config.rows + config.cols -2 + (config.rows -1); // if path was right first
-        // For path Down -> Right -> Up -> Left:
-        // Top-left: 0 (start)
-        // Bottom-left: config.rows - 1
-        // Bottom-right: config.rows - 1 + (config.cols - 1) => this.bottomRightCornerId
-        // Top-right: config.rows - 1 + (config.cols - 1) + (config.rows - 1)
+        // Note: corners[0] is 'start'
 
-        newLayout.push({ id: i, type: squareType });
+        newLayout.push({
+          id: i,
+          baseType: baseType,
+          currentEffectType: "none", // Will be set by setupLapEffects
+          isTempBad: false,
+          effectDetails: null,
+        });
       }
       this.boardSquares = newLayout;
     },
 
-    rollDice() {
-      if (this.isGameOver) return;
-      const steps = Math.floor(Math.random() * 6) + 1;
-      this.lastDiceRoll = steps;
-      this.gameMessage = `Rolled a ${steps}...`;
-      console.log(`Rolled a ${steps}`);
+    setupLapEffects() {
+      const config = this.currentStageConfig;
+      // Reset temporary effects from previous lap
+      this.boardSquares.forEach((sq) => {
+        sq.isTempBad = false;
+        // Only reset currentEffectType if it's a lap-specific effect or a collected normal_money
+        if (
+          sq.baseType === "normal" ||
+          sq.currentEffectType === "temp_bad_lap" ||
+          sq.currentEffectType === "normal_money"
+        ) {
+          sq.currentEffectType = "none"; // Will be re-assigned if it becomes normal_money
+        }
+        // sq.effectDetails = null; // Reset details carefully, some might be from baseType or choices
+      });
+
+      let candidateIds = [...this.candidateSquareIds]; // Non-corner, non-start squares
+
+      // 1. Add temporary bad squares
+      const numBadSquaresToPlace = getRandomInt(0, config.maxBadSquares);
+      shuffleArray(candidateIds);
+      for (let i = 0; i < numBadSquaresToPlace; i++) {
+        if (candidateIds.length === 0) break;
+        const badId = candidateIds.pop();
+        const square = this.boardSquares.find((sq) => sq.id === badId);
+        if (square) {
+          square.isTempBad = true;
+          square.currentEffectType = "temp_bad_lap";
+          square.effectDetails = { penalty: getRandomInt(5, 15) * this.playerStage }; // Store penalty
+        }
+      }
+
+      // 2. Transform some remaining normal squares to special types OR assign them a normal money value
+      candidateIds.forEach((id) => {
+        const square = this.boardSquares.find((sq) => sq.id === id);
+        // Ensure it's still a valid candidate (baseType 'normal' and not made 'temp_bad_lap')
+        if (square && square.baseType === "normal" && !square.isTempBad) {
+          const rand = Math.random();
+          if (rand < 0.1) {
+            // 10% Huge Money
+            square.currentEffectType = "huge_money";
+            square.effectDetails = { amount: this.currentHugeMoneyValue };
+          } else if (rand < 0.15) {
+            // 5% Choice: Dice vs Money
+            square.currentEffectType = "choice_dice_money";
+            // effectDetails for choices will be populated when landing or handled by a getter
+          } else if (rand < 0.2) {
+            // 5% Choice: Pick a Die
+            square.currentEffectType = "choice_pick_die";
+          } else {
+            // This is now a standard money-giving square
+            square.currentEffectType = "normal_money";
+            square.effectDetails = {
+              amount: Math.floor(getRandomInt(1, 3) * config.moneyMultiplier),
+            };
+          }
+        }
+      });
+      this.gameMessage = `Lap ${this.playerLap} setup! Money values refreshed.`;
+    },
+
+    // --- Dice & Movement ---
+    addReservedDie(dieData) {
+      // Max 3-4 reserved dice example
+      if (this.reservedDice.length < 4) {
+        this.reservedDice.push(dieData);
+        this.gameMessage = `Gained a ${dieData.type} die!`;
+      } else {
+        this.gameMessage = `Dice bag is full! Couldn't keep the new die.`;
+      }
+    },
+
+    rollDice(reservedDieIndex = -1) {
+      if (this.isGameOver || this.gamePhase !== "rolling") return;
+
+      let dieToRoll;
+      let steps;
+
+      if (reservedDieIndex >= 0 && reservedDieIndex < this.reservedDice.length) {
+        dieToRoll = this.reservedDice.splice(reservedDieIndex, 1)[0]; // Use and remove
+      } else {
+        dieToRoll = { type: DICE_TYPES.NORMAL }; // Default normal die
+      }
+
+      this.gameMessage = `Rolling a ${dieToRoll.type} die...`;
+
+      switch (dieToRoll.type) {
+        case DICE_TYPES.NORMAL:
+          steps = getRandomInt(1, 6);
+          break;
+        case DICE_TYPES.FIXED:
+          steps = dieToRoll.value || 1; // Default to 1 if value missing
+          break;
+        case DICE_TYPES.D20:
+          steps = getRandomInt(1, 20);
+          break;
+        case DICE_TYPES.REVERSE_FIXED:
+          steps = -(dieToRoll.value || 1);
+          break;
+        case DICE_TYPES.REVERSE_RANDOM:
+          steps = -getRandomInt(1, 6);
+          break;
+        default:
+          steps = getRandomInt(1, 6);
+      }
+
+      this.lastDiceRoll = {
+        value: Math.abs(steps),
+        type: dieToRoll.type,
+        direction: steps >= 0 ? "forward" : "backward",
+      };
+      console.log(`Rolled ${steps} with ${dieToRoll.type}`);
       this.movePlayer(steps);
     },
 
     movePlayer(steps) {
-      if (steps <= 0 || this.isGameOver) return;
-
+      this.gamePhase = "moving";
       let moneyEarnedThisTurn = 0;
-      for (let i = 0; i < steps; i++) {
-        this.playerPosition = (this.playerPosition + 1) % this.totalBoardSquares;
 
-        // Money per step
-        const baseMoney = Math.floor(Math.random() * 3) + 1; // 1 to 3
-        const stepMoney = Math.floor(baseMoney * this.currentStageConfig.moneyMultiplier);
-        this.playerMoney += stepMoney;
-        moneyEarnedThisTurn += stepMoney;
+      if (steps > 0) {
+        // Forward Movement
+        for (let i = 0; i < steps; i++) {
+          this.playerPosition = (this.playerPosition + 1) % this.totalBoardSquares;
+          const currentSq = this.boardSquares[this.playerPosition];
 
-        if (this.playerPosition === 0) {
-          // Passed Start
-          this.playerLap++;
-          this.gameMessage = `Completed a lap! Now on Lap ${this.playerLap}/${this.currentStageConfig.lapsToComplete}`;
-          console.log(`Lap completed. Current Lap: ${this.playerLap}`);
-          if (this.playerLap > this.currentStageConfig.lapsToComplete) {
-            this.handleBossEncounter();
-            return; // Stop movement if boss encounter happens
+          // Collect money from normal_money squares when passing/landing
+          if (
+            currentSq &&
+            currentSq.currentEffectType === "normal_money" &&
+            currentSq.effectDetails?.amount
+          ) {
+            const amount = currentSq.effectDetails.amount;
+            this.playerMoney += amount;
+            moneyEarnedThisTurn += amount;
+          }
+
+          if (this.playerPosition === 0) {
+            // Passed Start
+            this.playerLap++;
+            this.gameMessage = `Completed a lap! Now on Lap ${this.playerLap}/${this.currentStageConfig.lapsToComplete}`;
+            if (this.playerLap > this.currentStageConfig.lapsToComplete) {
+              this.handleBossEncounter();
+              return;
+            } else {
+              this.setupLapEffects(); // Refresh square effects for the new lap
+            }
           }
         }
+      } else if (steps < 0) {
+        // Backward Movement
+        for (let i = 0; i < Math.abs(steps); i++) {
+          this.playerPosition =
+            (this.playerPosition - 1 + this.totalBoardSquares) % this.totalBoardSquares;
+        }
       }
-      this.gameMessage = `Moved ${steps} steps, earned $${moneyEarnedThisTurn}. Landed on square ${this.playerPosition}.`;
-      console.log(`Moved to square ${this.playerPosition}. Money: ${this.playerMoney}`);
+
+      this.gamePhase = "landed";
+      // Update message based on actual earnings
+      let moveMsg = `Moved ${Math.abs(steps)} steps ${this.lastDiceRoll.direction}. Landed on ${
+        this.playerPosition
+      }.`;
+      if (moneyEarnedThisTurn > 0 && steps > 0) {
+        moveMsg += ` Earned $${moneyEarnedThisTurn}.`;
+      }
+      this.gameMessage = moveMsg;
       this.handleSquareLanding();
     },
 
     handleSquareLanding() {
-      if (this.isGameOver) return;
-      if (this.playerPosition < 0 || this.playerPosition >= this.boardSquares.length) {
-        console.error("Player position out of bounds:", this.playerPosition);
+      if (
+        this.isGameOver ||
+        this.playerPosition >= this.boardSquares.length ||
+        this.playerPosition < 0
+      )
         return;
-      }
-      const square = this.boardSquares[this.playerPosition];
-      console.log(`Landed on square ${square.id}, type: ${square.type}.`);
-      this.gameMessage += ` Landed on ${square.type} square ${square.id}.`;
 
-      if (square.type === "corner_br_bad") {
-        this.playerMoney -= 10;
-        if (this.playerMoney < 0) this.playerMoney = 0;
-        this.gameMessage += ` Lost $10! Money: ${this.playerMoney}.`;
-        console.log("Bad corner! Lost 10 money.");
+      const square = this.boardSquares[this.playerPosition];
+      let landingMessage = ` Landed on square ${square.id} (${square.baseType}, effect: ${square.currentEffectType}).`;
+
+      // Base type effects (fixed effects)
+      if (square.baseType === "corner_br") {
+        this.playerMoney -= 20; // Can go negative
+        landingMessage += ` Bad corner! Lost $20. Money: ${this.playerMoney}.`;
       }
-      // Add other square type logic here
+
+      // Current effect type (dynamic effects)
+      switch (square.currentEffectType) {
+        case "temp_bad_lap":
+          const penalty = square.effectDetails?.penalty || getRandomInt(5, 15) * this.playerStage;
+          this.playerMoney -= penalty;
+          landingMessage += ` Stepped on a trap! Lost $${penalty}.`;
+          break;
+        case "huge_money":
+          const hugeGain = square.effectDetails?.amount || this.currentHugeMoneyValue;
+          this.playerMoney += hugeGain;
+          landingMessage += ` Huge Money! +$${hugeGain}.`;
+          this.boardSquares[this.playerPosition].currentEffectType = "none"; // Mark as collected
+          this.boardSquares[this.playerPosition].effectDetails = null;
+          break;
+        case "choice_dice_money":
+          this.gamePhase = "awaiting_choice";
+          this.choiceDetails = {
+            type: "dice_vs_money",
+            message: "Choose your reward: Bonus Money or a Special Die?",
+            options: [
+              {
+                text: `Get $${5 * this.playerStage}`,
+                action: "get_money_bonus",
+                value: 5 * this.playerStage,
+              },
+              {
+                text: "Get a Fixed-3 Die",
+                action: "get_fixed_die",
+                value: { type: DICE_TYPES.FIXED, value: 3 },
+              },
+            ],
+          };
+          this.gameMessage = this.choiceDetails.message;
+          break;
+        case "choice_pick_die":
+          this.gamePhase = "awaiting_choice";
+          // Pre-generate 3-4 random dice options
+          const diceOptions = [];
+          const possibleDice = [
+            { type: DICE_TYPES.FIXED, value: getRandomInt(2, 6) },
+            { type: DICE_TYPES.D20 },
+            { type: DICE_TYPES.REVERSE_RANDOM },
+            { type: DICE_TYPES.FIXED, value: getRandomInt(1, 3) },
+          ];
+          shuffleArray(possibleDice);
+          for (let i = 0; i < getRandomInt(2, 3); i++) {
+            // offer 2 or 3 dice
+            diceOptions.push({
+              text: `Die: ${possibleDice[i].type}${
+                possibleDice[i].value ? " (" + possibleDice[i].value + ")" : ""
+              }`,
+              action: "get_chosen_die",
+              value: possibleDice[i],
+            });
+          }
+          this.choiceDetails = {
+            type: "pick_a_die",
+            message: "Choose a die to keep:",
+            options: diceOptions,
+          };
+          this.gameMessage = this.choiceDetails.message;
+          break;
+      }
+
+      // If no choice is pending, go back to rolling state
+      if (this.gamePhase === "landed") {
+        this.gamePhase = "rolling";
+      }
     },
 
+    playerMakesChoice(chosenOption) {
+      if (this.gamePhase !== "awaiting_choice" || !this.choiceDetails) return;
+
+      const originalSquareIndex = this.playerPosition;
+
+      switch (chosenOption.action) {
+        case "get_money_bonus":
+          this.playerMoney += chosenOption.value;
+          this.gameMessage = `You chose money! +$${chosenOption.value}.`;
+          break;
+        case "get_fixed_die":
+        case "get_chosen_die":
+          this.addReservedDie(chosenOption.value);
+          break;
+      }
+
+      if (originalSquareIndex >= 0 && originalSquareIndex < this.boardSquares.length) {
+        // Reset the effect of the square that offered the choice
+        this.boardSquares[originalSquareIndex].currentEffectType = "none";
+        this.boardSquares[originalSquareIndex].effectDetails = null;
+      }
+      this.choiceDetails = null;
+      this.gamePhase = "rolling";
+    },
+
+    // --- Stage Progression ---
     handleBossEncounter() {
-      // For now, assume boss is 'passed' if you reach here.
-      // In a real game, you'd check money vs boss requirement.
-      this.gameMessage = `Stage ${this.playerStage} Boss Cleared! Preparing next stage...`;
-      console.log(`Boss for stage ${this.playerStage} cleared.`);
-      this.advanceStage();
+      this.gamePhase = "boss_encounter";
+      const config = this.currentStageConfig;
+      this.gameMessage = `Boss Time: ${config.bossName}! You need $X to pass.`; // TODO: Define boss cost
+      // Placeholder: For now, player always wins boss to test stage progression
+      console.log(`Facing boss for stage ${this.playerStage}.`);
+      // Simulate winning the boss
+      setTimeout(() => {
+        this.gameMessage = `You defeated ${config.bossName}!`;
+        this.advanceStage();
+      }, 1500); // Short delay to show boss message
     },
 
     advanceStage() {
       this.playerStage++;
       if (this.playerStage > MAX_STAGES) {
-        this.gameMessage = "Congratulations! You've beaten all stages!";
+        this.gameMessage = "CONGRATULATIONS! You've beaten all stages and won the game!";
         this.isGameOver = true;
+        this.gamePhase = "game_won";
         console.log("Game Won!");
       } else {
-        this.setupStage(); // This will reset lap to 1 and setup new board
+        this.setupStage(); // This will set up new board, reset lap to 1
+        this.gamePhase = "rolling";
       }
     },
   },
