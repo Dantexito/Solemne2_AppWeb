@@ -315,58 +315,60 @@ export const useGameStore = defineStore("game", {
       this.movePlayer(steps);
     },
 
-    movePlayer(steps) {
-      this.gamePhase = "moving";
-      let moneyEarnedThisTurn = 0;
+        movePlayer(steps) {
+        this.gamePhase = "moving";
+        let moneyEarnedThisTurn = 0;
 
-      if (steps > 0) {
-        // Forward Movement
-        for (let i = 0; i < steps; i++) {
-          this.playerPosition = (this.playerPosition + 1) % this.totalBoardSquares;
-          const currentSq = this.boardSquares[this.playerPosition];
+        if (steps > 0) {
+            // Forward Movement
+            for (let i = 0; i < steps; i++) {
+            this.playerPosition = (this.playerPosition + 1) % this.totalBoardSquares;
+            const currentSq = this.boardSquares[this.playerPosition];
 
-          // Collect money from normal_money squares when passing/landing
-          if (
-            currentSq &&
-            currentSq.currentEffectType === "normal_money" &&
-            currentSq.effectDetails?.amount
-          ) {
-            const amount = currentSq.effectDetails.amount;
-            this.playerMoney += amount;
-            moneyEarnedThisTurn += amount;
-          }
-
-          if (this.playerPosition === 0) {
-            // Passed Start
-            this.playerLap++;
-            this.gameMessage = `Completed a lap! Now on Lap ${this.playerLap}/${this.currentStageConfig.lapsToComplete}`;
-            if (this.playerLap > this.currentStageConfig.lapsToComplete) {
-              this.handleBossEncounter();
-              return;
-            } else {
-              this.setupLapEffects(); // Refresh square effects for the new lap
+            // Collect money from normal_money squares when passing/landing
+            if (
+                currentSq &&
+                currentSq.currentEffectType === "normal_money" &&
+                currentSq.effectDetails?.amount
+            ) {
+                const amount = currentSq.effectDetails.amount;
+                this.playerMoney += amount;
+                moneyEarnedThisTurn += amount;
             }
-          }
-        }
-      } else if (steps < 0) {
-        // Backward Movement
-        for (let i = 0; i < Math.abs(steps); i++) {
-          this.playerPosition =
-            (this.playerPosition - 1 + this.totalBoardSquares) % this.totalBoardSquares;
-        }
-      }
 
-      this.gamePhase = "landed";
-      // Update message based on actual earnings
-      let moveMsg = `Moved ${Math.abs(steps)} steps ${this.lastDiceRoll.direction}. Landed on ${
-        this.playerPosition
-      }.`;
-      if (moneyEarnedThisTurn > 0 && steps > 0) {
-        moveMsg += ` Earned $${moneyEarnedThisTurn}.`;
-      }
-      this.gameMessage = moveMsg;
-      this.handleSquareLanding();
-    },
+            if (this.playerPosition === 0) {
+                // Passed Start → Finaliza turno aquí
+                this.playerLap++;
+                this.gameMessage = `¡Completaste una vuelta! Ahora estás en la vuelta ${this.playerLap}/${this.currentStageConfig.lapsToComplete}`;
+            
+                if (this.playerLap > this.currentStageConfig.lapsToComplete) {
+                    this.handleBossEncounter();
+                } else {
+                    this.setupLapEffects(); // Refrescar efectos si aplica
+                }
+            
+                break; // ← ¡Esta es la clave! Detener el movimiento en casilla 0
+            }            
+        }
+        } else if (steps < 0) {
+            // Backward Movement
+            for (let i = 0; i < Math.abs(steps); i++) {
+            this.playerPosition =
+                (this.playerPosition - 1 + this.totalBoardSquares) % this.totalBoardSquares;
+            }
+        }
+
+        this.gamePhase = "landed";
+        // Update message based on actual earnings
+        let moveMsg = `Moved ${Math.abs(steps)} steps ${this.lastDiceRoll.direction}. Landed on ${
+            this.playerPosition
+        }.`;
+        if (moneyEarnedThisTurn > 0 && steps > 0) {
+            moveMsg += ` Earned $${moneyEarnedThisTurn}.`;
+        }
+        this.gameMessage = moveMsg;
+        this.handleSquareLanding();
+        },
 
     handleSquareLanding() {
       if (

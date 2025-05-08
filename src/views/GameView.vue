@@ -84,12 +84,6 @@ h1 {
   /* We don't set width/height here; GameBoard does. */
 }
 
-.game-board-component {
-  /* GameBoard styles are in its own component.
-     It needs to define its own explicit width and height based on its grid.
-     Make sure its background allows GameInfo to be readable on top. */
-}
-
 .game-info-overlay-panel {
   position: absolute;
   top: 50%;
