@@ -1,6 +1,14 @@
-// src/App.vue
+<!--- src/App.vue --->
+<!---
+Serves as the foundational layout or "shell" that wraps around all other content and views within the game.
+It defines the consistent structure that will be present on every page of the app (common header, navigation links, common footer).
+Contains <router-view /> a placeholder where the content of different "/views" will be dynamically rendered based on the current URL in the browser.
+
+Could be a place to include global styles or JavaScript logic that needs to run for the entire application lifecycle (e.g., checking user auth status)
+
+--->
 <script setup>
-// You can import global stores or perform app-wide setup here if needed
+// Import global stores or perform app-wide setup here if needed later on... idk, for now just empty
 </script>
 
 <template>
@@ -18,7 +26,7 @@
     </main>
 
     <footer class="app-footer">
-      <p>&copy; {{ new Date().getFullYear() }} Dice or Die Game</p>
+      <p>&copy; {{ new Date().getFullYear() }} Dice or Die</p>
     </footer>
   </div>
 </template>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, watch } from "vue";
 import { generateDieImageFilename, getDieImageUrl } from "../utils/imageUtils";
 
 const props = defineProps({

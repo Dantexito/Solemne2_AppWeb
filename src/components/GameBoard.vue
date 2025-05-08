@@ -1,6 +1,5 @@
 <!--- src/components/GameBoard.vue --->
 <script setup>
-import { computed } from "vue";
 import { storeToRefs } from "pinia"; // Not strictly needed if using gameStore directly
 import { useGameStore } from "../stores/game";
 import BoardSquare from "./BoardSquare.vue";

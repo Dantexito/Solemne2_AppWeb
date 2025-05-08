@@ -1,4 +1,6 @@
 // src/stores/game.js
+// Here we got states, getters, actions,
+
 import { defineStore } from "pinia";
 
 // --- Configuration ---
@@ -20,6 +22,22 @@ const STAGE_CONFIGS = {
     bossName: "Greedy Goblin King",
   },
   3: {
+    rows: 9,
+    cols: 9,
+    moneyMultiplier: 1.5,
+    lapsToComplete: 3,
+    maxBadSquares: 4,
+    bossName: "Greedy Goblin King",
+  },
+  4: {
+    rows: 9,
+    cols: 9,
+    moneyMultiplier: 1.5,
+    lapsToComplete: 3,
+    maxBadSquares: 4,
+    bossName: "Greedy Goblin King",
+  },
+  5: {
     rows: 12,
     cols: 12,
     moneyMultiplier: 2,
@@ -447,11 +465,11 @@ export const useGameStore = defineStore("game", {
             { type: DICE_TYPES.FIXED, value: 6 },
             { type: DICE_TYPES.D20 },
             { type: DICE_TYPES.REVERSE_RANDOM },
-            { type: DICE_TYPES.REVERSE_FIXED, value: getRandomInt(1, 3) },
+            { type: DICE_TYPES.REVERSE_FIXED, value: getRandomInt(1, 6) },
             { type: DICE_TYPES.NORMAL }, // A chance to get another normal die
             // Add more potential dice types/values to the pool if desired
           ];
-          shuffleArray(dicePool); // Shuffle the pool
+          shuffleArray(dicePool); // Shuffle the dice pool
 
           const numDiceToOffer = getRandomInt(3, 4);
           const finalDiceOptions = [];
@@ -523,10 +541,8 @@ export const useGameStore = defineStore("game", {
     handleBossEncounter() {
       this.gamePhase = "boss_encounter";
       const config = this.currentStageConfig;
-      this.gameMessage = `Boss Time: ${config.bossName}! You need $X to pass.`; // TODO: Define boss cost
-      // Placeholder: For now, player always wins boss to test stage progression
-      console.log(`Facing boss for stage ${this.playerStage}.`);
-      // Simulate winning the boss
+      this.gameMessage = `Boss Time: ${config.bossName}! You need $75 to pass.`; // TODO: Define boss cost
+
       setTimeout(() => {
         this.gameMessage = `You defeated ${config.bossName}!`;
         this.advanceStage();
