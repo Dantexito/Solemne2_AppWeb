@@ -12,12 +12,13 @@ SHOLD have
 
 - tile color indicator of moves while hovering over reserve dice, fixed one color, random another to let you know where you COULD land
 - alternative ways of winning, maybe relic finding, colect all relic and you win instantly
-- 
+- correct handling of images (using .webp)
+
 
 COULD have
 
 - prison and warden boss
--
+- SHOP, Merchant
 
 
 WONT have for first test
