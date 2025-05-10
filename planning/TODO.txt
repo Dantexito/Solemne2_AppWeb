@@ -29,9 +29,20 @@ WONT HAVE for first test
 - better sprites/design
 - more complex bonuses, dice, cards.
 
-- transition into a party game
+- transition into a party game 
+
+
+BRO DANTE THIS ARE SOME OF MY THOUGHTS
+
+- I was thinking that the game should shift more towards using dice and cards and less money oriented, try and make party game but should also work single player. Maybe look more into actual party board games.
+
+
+
+
 
 
 ACHIEVEMENTS
 
 Go X amount of rounds without spending money or losing
+
+
