@@ -1,27 +1,27 @@
 MOSCOW
 
-MUST have
+MUST HAVE
 
-- stop at the end of each lap, pick dice or money maybe
-- Bosses (at least 2) that challenge you to be better a the game
+- stop at the end of each lap, pick dice or money maybe - DANTE
+- Bosses (at least 2) that challenge you to be better a the game - LUCAS
 - deluxe and special tiles, more tiles for rewards and stuff
 - each passing tile should give money, effect tiles should give $1 when passing by not nothing
 - clear indicator of when you win or lose and which boss is present on the stage (cannot go blind into the boss, has to know what to expect).
 
-SHOLD have
+SHOLD HAVE
 
 - tile color indicator of moves while hovering over reserve dice, fixed one color, random another to let you know where you COULD land
 - alternative ways of winning, maybe relic finding, colect all relic and you win instantly
 - correct handling of images (using .webp)
 
 
-COULD have
+COULD HAVE
 
 - prison and warden boss
 - SHOP, Merchant
 
 
-WONT have for first test
+WONT HAVE for first test
 
 - Sounds
 - better sprites/design
@@ -29,3 +29,6 @@ WONT have for first test
 
 
 
+ACHIEVEMENTS
+
+Go X amount of rounds without spending money or losing
