@@ -13,12 +13,14 @@ SHOLD HAVE
 - tile color indicator of moves while hovering over reserve dice, fixed one color, random another to let you know where you COULD land
 - alternative ways of winning, maybe relic finding, colect all relic and you win instantly
 - correct handling of images (using .webp)
+- Boosts that last X amount of laps
 
 
 COULD HAVE
 
 - prison and warden boss
 - SHOP, Merchant
+- Weighted dice
 
 
 WONT HAVE for first test
@@ -27,6 +29,7 @@ WONT HAVE for first test
 - better sprites/design
 - more complex bonuses, dice, cards.
 
+- transition into a party game
 
 
 ACHIEVEMENTS

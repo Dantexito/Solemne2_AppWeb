@@ -32,3 +32,10 @@ Dice or Die (play of words as Dice is plural and Die is singular and could also 
 Square Deal (as the game is mostly constructed out of squares and managing money)
 Diceru (idk just a word)
 
+
+
+Fail state <--- Obstacles       Actions ---> Win State
+
+Mechanics emotions
+
+
