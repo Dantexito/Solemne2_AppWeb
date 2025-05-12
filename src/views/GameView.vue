@@ -1,6 +1,6 @@
 // src/views/GameView.vue
 <script setup>
-import { onMounted } from "vue";
+import { onMounted, computed } from "vue"; // Added computed
 import { storeToRefs } from "pinia";
 import { useGameStore } from "../stores/game"; // Adjust path if store is elsewhere
 import GameBoard from "../components/GameBoard.vue";
@@ -9,14 +9,14 @@ import ReservedDiceDisplay from "../components/ReservedDiceDisplay.vue";
 import ChoiceModal from "../components/ChoiceModal.vue";
 
 const gameStore = useGameStore();
-const { isGameOver, gamePhase, choiceDetails, boardRows, boardCols } = storeToRefs(gameStore); // Added boardRows/Cols for overlay sizing
+const { isGameOver, gamePhase, choiceDetails, boardRows, boardCols } = storeToRefs(gameStore);
 
 onMounted(() => {
   gameStore.initializeGame();
 });
 
 function handleRollNormalDice() {
-  if (gameStore.gamePhase === "rolling" && !gameStore.isGameOver) {
+  if (gameStore.gamePhase === "rolling" && !gameStore.isGameOver && gameStore.assetsLoaded) {
     gameStore.rollDice();
   }
 }
@@ -24,10 +24,28 @@ function handleRollNormalDice() {
 function handleChoice(option) {
   gameStore.playerMakesChoice(option);
 }
+
+// Computed property to display the current animation speed text
+const currentSpeedText = computed(() => {
+  switch (gameStore.animationSpeedMultiplier) {
+    case 0:
+      return "Instant";
+    case 1:
+      return "Normal";
+    case 2:
+      return "Faster";
+    default:
+      return "Unknown";
+  }
+});
+
+function handleToggleSpeed() {
+  gameStore.toggleAnimationSpeed();
+}
 </script>
 
 <template>
-  <div id="game-container">
+  <div class="game-view-container">
     <div class="main-game-area">
       <div class="board-with-info-overlay">
         <GameBoard class="game-board-component" />
@@ -36,10 +54,23 @@ function handleChoice(option) {
 
       <div class="right-action-panel">
         <ReservedDiceDisplay class="dice-reserve-component" />
-        <div class="normal-roll-button-container">
-          <button @click="handleRollNormalDice" :disabled="isGameOver || gamePhase !== 'rolling'">
-            Roll Normal Die
-          </button>
+
+        <div class="action-buttons-group">
+          <div class="normal-roll-button-container">
+            <button
+              @click="handleRollNormalDice"
+              :disabled="isGameOver || gamePhase !== 'rolling' || gameStore.isAnimating"
+              class="roll-button"
+            >
+              Roll Normal Die
+            </button>
+          </div>
+
+          <div class="speed-control-container">
+            <button @click="handleToggleSpeed" class="speed-button">
+              Speed: {{ currentSpeedText }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -53,35 +84,26 @@ function handleChoice(option) {
 </template>
 
 <style scoped>
-#game-container {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+.game-view-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 15px;
-  min-height: 100vh;
-  background-color: #e8e8e8; /* Slightly different page background */
-}
-
-h1 {
-  color: #2c3e50;
-  margin-bottom: 25px;
+  width: 100%;
 }
 
 .main-game-area {
-  display: flex; /* Aligns board-container and right-panel side-by-side */
+  display: flex;
   flex-direction: row;
-  align-items: flex-start; /* Align tops of board and right panel */
-  gap: 25px; /* Space between board area and right panel */
+  align-items: flex-start;
+  gap: 25px;
   justify-content: center;
   width: 100%;
-  max-width: 950px; /* Adjust to fit everything comfortably */
+  max-width: 950px;
+  margin-top: 20px;
 }
 
 .board-with-info-overlay {
-  position: relative; /* This is CRUCIAL for absolute positioning GameInfo */
-  /* Its size will be determined by GameBoard component */
-  /* We don't set width/height here; GameBoard does. */
+  position: relative;
 }
 
 .game-info-overlay-panel {
@@ -89,58 +111,71 @@ h1 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-
-  /* Calculate width/height to fit *inside* the perimeter squares */
-  /* Assuming squares are 60px, perimeter is 1 square thick. */
-  /* Board is (N_cols * 60px) wide. Empty space is (N_cols - 2) * 60px wide. */
-  width: calc(
-    v-bind(boardCols) * 60px - 2 * 60px - 20px
-  ); /* Board width - 2 squares - some padding */
-  height: calc(
-    v-bind(boardRows) * 60px - 2 * 60px - 20px
-  ); /* Board height - 2 squares - some padding */
-
-  /* Fallback/Max dimensions for the info panel */
-  min-width: 180px;
-  min-height: 120px;
-  max-width: 300px; /* Adjust as needed */
-  max-height: 220px; /* Adjust as needed */
-
-  /* pointer-events: none; */ /* Remove if info panel becomes interactive, but for display it's fine */
-  z-index: 10; /* Ensure it's above the board squares if any visual overlap */
+  width: calc(v-bind(boardCols) * 60px - 2 * 60px - 15px);
+  height: calc(v-bind(boardRows) * 60px - 2 * 60px - 15px);
+  min-width: 160px;
+  max-width: 320px;
+  min-height: 100px;
+  max-height: 250px;
+  z-index: 10;
 }
 
 .right-action-panel {
   display: flex;
   flex-direction: column;
-  align-items: center; /* Center content horizontally */
-  gap: 20px; /* Space between reserved dice and roll button */
-  min-width: 170px; /* Give it some space */
-  padding-top: 0; /* Align with top of board if desired, or add margin */
+  align-items: stretch;
+  gap: 15px; /* Reduced gap slightly */
+  min-width: 160px;
+  max-width: 200px;
 }
 
 .dice-reserve-component {
-  width: 100%; /* Take full width of its parent (.right-action-panel) */
-  /* Styles for ReservedDiceDisplay are in its own component */
-}
-
-.normal-roll-button-container {
   width: 100%;
 }
 
-.normal-roll-button-container button {
+.action-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Space between roll button and speed button */
   width: 100%;
-  padding: 12px 15px;
-  font-size: 1em;
+}
+
+.normal-roll-button-container,
+.speed-control-container {
+  width: 100%;
+}
+
+.roll-button,
+.speed-button {
+  width: 100%;
+  padding: 10px 10px; /* Adjusted padding */
+  font-size: 0.9em; /* Slightly smaller font */
   font-weight: bold;
   cursor: pointer;
-  background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
-.normal-roll-button-container button:disabled {
+
+.roll-button {
+  background-color: #28a745; /* Green */
+}
+.roll-button:hover:not(:disabled) {
+  background-color: #218838;
+  transform: translateY(-1px);
+}
+
+.speed-button {
+  background-color: #007bff; /* Blue */
+}
+.speed-button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+.roll-button:disabled {
   background-color: #aaa;
   cursor: not-allowed;
   opacity: 0.7;

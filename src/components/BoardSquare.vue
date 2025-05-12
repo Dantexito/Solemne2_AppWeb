@@ -26,7 +26,7 @@ const displayData = computed(() => {
   if (sq.baseType === "start") {
     icons.push("🏁"); // or 🏠
   } else if (sq.baseType === "corner_br") {
-    icons.push("💸"); // Special bad corner
+    icons.push("☣️☢️"); // Special bad corner
     text = "-$20";
   } else if (sq.baseType.startsWith("corner_")) {
     icons.push("⭐"); // Generic other corners
@@ -47,7 +47,7 @@ const displayData = computed(() => {
         text = "Choice";
         break;
       case "choice_pick_die":
-        icons = ["🎁", "🎲"]; // Gift box + Dice
+        icons = ["🎲", "🎲"]; // Gift box + Dice
         text = "Get Die";
         break;
       case "normal_money":
