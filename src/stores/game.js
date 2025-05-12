@@ -121,7 +121,7 @@ export const useGameStore = defineStore("game", {
     choiceDetails: null,
     animationSpeedMultiplier: 1,
     isAnimating: false,
-    diceRollAnimationBaseDuration: 1500,
+    diceRollAnimationBaseDuration: 500,
     playerStepBaseDuration: 400,
     lastPlayerPositionBeforeThisMove: 0,
     assetsLoaded: false,
@@ -426,7 +426,21 @@ export const useGameStore = defineStore("game", {
             passedStartThisTurn = true;
             this.playerLap++;
             console.log("Store: movePlayer - Passed Start. New Lap:", this.playerLap);
-          }
+          
+            this.gameMessage = `Completed a lap! Now on Lap ${this.playerLap}/${this.currentStageConfig.lapsToComplete}.`;
+          
+            await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000)));
+          
+            if (this.playerLap > this.currentStageConfig.lapsToComplete) {
+              await this.handleBossEncounter();
+              return;
+            } else {
+              this.setupLapEffects();
+              await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(500)));
+            }
+          
+            break; // ← Detiene el movimiento aquí al dar una vuelta
+          }          
         } else {
           this.playerPosition =
             (this.playerPosition - 1 + this.totalBoardSquares) % this.totalBoardSquares;
