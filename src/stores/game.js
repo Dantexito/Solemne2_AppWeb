@@ -17,7 +17,7 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 4,
     minChoicePickDieSquares: 2,
     maxChoicePickDieSquares: 4,
-    bossName: "Tax Collector",
+    bossName: "Tax Collector", // Boss logic is on hold, but config is here
   },
   2: {
     // 9x9
@@ -117,14 +117,19 @@ export const useGameStore = defineStore("game", {
     boardSquares: [],
     gameMessage: "Roll the die to start!",
     isGameOver: false,
-    gamePhase: "rolling",
+    gamePhase: "rolling", // Current phase of the game turn
     choiceDetails: null,
     animationSpeedMultiplier: 1,
-    isAnimating: false,
-    diceRollAnimationBaseDuration: 1500,
-    playerStepBaseDuration: 400,
+    isAnimating: false, // Flag to indicate if an animation sequence is in progress
+    diceRollAnimationBaseDuration: 1000, // Base duration for dice roll visual
+    playerStepBaseDuration: 300, // Base duration for player moving one square
     lastPlayerPositionBeforeThisMove: 0,
-    assetsLoaded: false,
+    assetsLoaded: false, // Simplified for now, set to true in initializeGame
+
+    // Boss related state (on hold for implementation, but can remain in state)
+    currentStageBoss: null,
+    currentBossMoneyRequirement: 0,
+    diceFightRolls: null,
   }),
 
   getters: {
@@ -166,6 +171,15 @@ export const useGameStore = defineStore("game", {
     diceBagCapacityDisplay(state) {
       return `${state.reservedDice.length}/${state.maxDiceInBag}`;
     },
+
+    // New getter to determine player's current action for sprite animation
+    playerActionState(state) {
+      if (state.gamePhase === "player_moving_animation") {
+        return "walking";
+      }
+      // Could add more states here, e.g., 'attacking' if gamePhase is 'boss_dice_fight'
+      return "idle"; // Default state
+    },
   },
 
   actions: {
@@ -188,19 +202,17 @@ export const useGameStore = defineStore("game", {
 
     initializeGame() {
       console.log("Store: initializeGame - STARTED");
-      this.assetsLoaded = true;
+      this.assetsLoaded = true; // Assuming assets are ready (preloading on hold)
       this.playerStage = 1;
       this.isGameOver = false;
       this.isAnimating = false;
       this.reservedDice = [];
+      this.playerMoney = 0; // Reset money for a new game
       this.setupStage();
       if (this.gamePhase !== "awaiting_choice") {
         this.gamePhase = "rolling";
       }
-      console.log(
-        "Store: initializeGame - FINISHED. Board should be ready. Phase:",
-        this.gamePhase
-      );
+      console.log("Store: initializeGame - FINISHED. Phase:", this.gamePhase);
     },
 
     setupStage() {
@@ -215,12 +227,26 @@ export const useGameStore = defineStore("game", {
       this.playerLap = 1;
       this.playerPosition = 0;
       this.lastPlayerPositionBeforeThisMove = 0;
-      this.playerMoney = this.playerStage === 1 && this.playerLap === 1 ? 0 : this.playerMoney;
+      // Money is not reset here per stage, only on initializeGame
       this.lastDiceRoll = null;
+      this.choiceDetails = null; // Clear any pending choices
+
+      // Boss selection (on hold for implementation, but keep structure)
+      // const availableBosses = [...BOSS_POOL];
+      // this.currentStageBoss = shuffleArray(availableBosses)[0];
+      // if (this.currentStageBoss.baseMoneyRequirement) {
+      //   this.currentBossMoneyRequirement = Math.floor(this.currentStageBoss.baseMoneyRequirement * (1 + (this.playerStage -1) * 0.5));
+      // } else {
+      //   this.currentBossMoneyRequirement = 0;
+      // }
+      // console.log(`Store: Stage ${this.playerStage} Boss: ${this.currentStageBoss?.name || 'N/A'}, Money Req: ${this.currentBossMoneyRequirement}`);
+      this.currentStageBoss = null; // Explicitly nullify if boss logic is on hold
+
       this.generateBoardLayout();
       this.setupLapEffects();
       this.gameMessage = `Stage ${this.playerStage} - Lap ${this.playerLap}/${config.lapsToComplete}. Roll the die!`;
       this.gamePhase = "rolling";
+      this.isAnimating = false; // Ensure ready for input
       console.log("Store: setupStage - FINISHED. Phase:", this.gamePhase);
     },
 
@@ -259,12 +285,14 @@ export const useGameStore = defineStore("game", {
       this.boardSquares.forEach((sq) => {
         sq.isTempBad = false;
         if (sq.baseType === "normal") {
+          // Only reset normal squares' dynamic effects
           sq.currentEffectType = "none";
           sq.effectDetails = null;
         }
       });
       let availableCandidateIds = [...this.candidateSquareIds];
       shuffleArray(availableCandidateIds);
+
       const numBadSquares = getRandomInt(config.minBadSquares, config.maxBadSquares);
       for (let i = 0; i < numBadSquares; i++) {
         if (availableCandidateIds.length === 0) break;
@@ -400,7 +428,7 @@ export const useGameStore = defineStore("game", {
     },
 
     async movePlayer(steps) {
-      this.gamePhase = "player_moving_animation";
+      this.gamePhase = "player_moving_animation"; // Player is now "walking"
       let moneyEarnedThisTurn = 0;
       const totalStepsToTake = Math.abs(steps);
       const direction = steps > 0 ? 1 : -1;
@@ -436,38 +464,30 @@ export const useGameStore = defineStore("game", {
         );
       }
 
-      // --- After movement animation is complete ---
-      let landedMessage = ""; // Start with an empty message for this part
-
+      // After movement animation is complete
+      let landedMessage = "";
       if (passedStartThisTurn) {
         this.gameMessage = `Completed a lap! Now on Lap ${this.playerLap}/${this.currentStageConfig.lapsToComplete}.`;
-        console.log("Store: movePlayer - Lap completed processing. Current Lap:", this.playerLap);
-
-        // Add a delay for "Lap Complete" message visibility
-        await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000))); // e.g., 1 second pause
-
+        await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000))); // Pause for lap message
         if (this.playerLap > this.currentStageConfig.lapsToComplete) {
-          await this.handleBossEncounter();
-          // handleBossEncounter should manage isAnimating and gamePhase.
-          // If game ends or new stage starts, it might return early from there.
-          if (this.isGameOver || this.gamePhase === "game_won" || this.gamePhase === "rolling") {
-            console.log("Store: movePlayer - Boss encounter concluded turn. Returning.");
-            return; // Exit movePlayer
-          }
+          // Boss logic on hold, so we'll just advance stage for now or end game
+          console.log("Store: movePlayer - Boss encounter would happen here.");
+          this.gameMessage = "Reached end of laps for stage!";
+          await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000)));
+          await this.advanceStage(); // Or handle actual boss logic
+          if (this.isGameOver || this.gamePhase === "game_won" || this.gamePhase === "rolling")
+            return;
         } else {
-          // It's a regular new lap, setup effects now
-          this.setupLapEffects(); // This sets its own message like "Lap X effects set!"
-          // The message from setupLapEffects will be the current gameMessage
-          await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(500))); // Brief pause after effects set
+          this.setupLapEffects(); // Sets its own message
+          await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(500)));
         }
       }
 
-      this.gamePhase = "landed"; // Player has officially landed
+      this.gamePhase = "landed"; // Player has landed, sprite should go to idle
       landedMessage = `Landed on square ${this.playerPosition}.`;
       if (moneyEarnedThisTurn > 0 && direction > 0) {
         landedMessage += ` Earned $${moneyEarnedThisTurn} this turn.`;
       }
-      // Append landing info to whatever message is current (lap complete, effects set, etc.)
       this.gameMessage = (this.gameMessage + " " + landedMessage).trim();
 
       console.log(
@@ -487,7 +507,10 @@ export const useGameStore = defineStore("game", {
       if (this.gamePhase === "awaiting_choice") {
         this.isAnimating = false;
         console.log("Store: movePlayer - Ended in awaiting_choice. isAnimating set to false.");
-      } else if (this.gamePhase !== "boss_encounter" && !this.isGameOver) {
+      } else if (
+        this.gamePhase !== "boss_encounter_intro" &&
+        /* other boss phases */ !this.isGameOver
+      ) {
         this.gamePhase = "rolling";
         this.isAnimating = false;
         console.log("Store: movePlayer - Ended, phase set to rolling. isAnimating set to false.");
@@ -511,48 +534,43 @@ export const useGameStore = defineStore("game", {
         this.playerPosition < 0 ||
         this.playerPosition >= this.boardSquares.length
       ) {
-        console.error("Invalid playerPosition or boardSquares in handleSquareLanding");
         this.gamePhase = "rolling";
         this.isAnimating = false;
         return;
       }
-
       const square = this.boardSquares[this.playerPosition];
       let effectAppliedMessage = "";
-
       console.log(
         "Store: handleSquareLanding - Processing square:",
         JSON.parse(JSON.stringify(square))
       );
-
       if (square.baseType === "corner_br") {
         this.playerMoney -= 20;
-        effectAppliedMessage += ` Bad corner! Lost $20. Money: ${this.playerMoney}.`;
+        effectAppliedMessage += ` Bad corner! Lost $20.`;
       }
       switch (square.currentEffectType) {
         case "temp_bad_lap":
           const penalty = square.effectDetails?.penalty || getRandomInt(5, 15) * this.playerStage;
           this.playerMoney -= penalty;
-          effectAppliedMessage += ` Stepped on a trap! Lost $${penalty}.`;
+          effectAppliedMessage += ` Trap! -$${penalty}.`;
           break;
         case "huge_money":
           const hugeGain = square.effectDetails?.amount || this.currentHugeMoneyValue;
           this.playerMoney += hugeGain;
-          effectAppliedMessage += ` Huge Money! +$${hugeGain}.`;
-          this.boardSquares[this.playerPosition].currentEffectType = "none";
-          this.boardSquares[this.playerPosition].effectDetails = null;
+          effectAppliedMessage += ` Huge! +$${hugeGain}.`;
+          square.currentEffectType = "none";
+          square.effectDetails = null;
           break;
         case "choice_dice_money":
           this.gamePhase = "awaiting_choice";
           let offeredDieInChoice;
-          const randDieChoice = Math.random();
-          if (randDieChoice < 0.6)
-            offeredDieInChoice = { type: DICE_TYPES.FIXED, value: getRandomInt(2, 6) };
-          else if (randDieChoice < 0.85) offeredDieInChoice = { type: DICE_TYPES.REVERSE_RANDOM };
+          const rdc = Math.random();
+          if (rdc < 0.6) offeredDieInChoice = { type: DICE_TYPES.FIXED, value: getRandomInt(2, 6) };
+          else if (rdc < 0.85) offeredDieInChoice = { type: DICE_TYPES.REVERSE_RANDOM };
           else offeredDieInChoice = { type: DICE_TYPES.D20 };
           this.choiceDetails = {
             type: "dice_vs_money",
-            message: "Choose your reward:",
+            message: "Choose reward:",
             options: [
               {
                 text: `Get $${10 * this.playerStage}`,
@@ -561,7 +579,7 @@ export const useGameStore = defineStore("game", {
                 visual: { type: "money" },
               },
               {
-                text: `Get a ${offeredDieInChoice.type}${
+                text: `Get ${offeredDieInChoice.type}${
                   offeredDieInChoice.value ? " (" + offeredDieInChoice.value + ")" : ""
                 } Die`,
                 action: "get_chosen_die",
@@ -571,13 +589,10 @@ export const useGameStore = defineStore("game", {
             ],
           };
           effectAppliedMessage += " " + this.choiceDetails.message;
-          console.log(
-            "Store: handleSquareLanding - Set gamePhase to awaiting_choice for dice_vs_money."
-          );
           break;
         case "choice_pick_die":
           this.gamePhase = "awaiting_choice";
-          const dicePool = [
+          const dPool = [
             { type: DICE_TYPES.FIXED, value: 1 },
             { type: DICE_TYPES.FIXED, value: 2 },
             { type: DICE_TYPES.FIXED, value: 3 },
@@ -589,37 +604,33 @@ export const useGameStore = defineStore("game", {
             { type: DICE_TYPES.REVERSE_FIXED, value: getRandomInt(1, 6) },
             { type: DICE_TYPES.NORMAL },
           ];
-          shuffleArray(dicePool);
-          const numDiceToOffer = getRandomInt(3, 4);
-          const finalDiceOptions = [];
-          const offeredSignatures = new Set();
-          for (const die of dicePool) {
-            if (finalDiceOptions.length >= numDiceToOffer) break;
-            let signature = die.type;
-            if (die.type === DICE_TYPES.FIXED || die.type === DICE_TYPES.REVERSE_FIXED)
-              signature += `_${die.value}`;
-            if (!offeredSignatures.has(signature)) {
-              finalDiceOptions.push({
-                text: `Die: ${die.type}${die.value !== undefined ? " (" + die.value + ")" : ""}`,
+          shuffleArray(dPool);
+          const numOffer = getRandomInt(3, 4);
+          const finalOpts = [];
+          const sigs = new Set();
+          for (const d of dPool) {
+            if (finalOpts.length >= numOffer) break;
+            let sig = d.type;
+            if (d.type === DICE_TYPES.FIXED || d.type === DICE_TYPES.REVERSE_FIXED)
+              sig += `_${d.value}`;
+            if (!sigs.has(sig)) {
+              finalOpts.push({
+                text: `Die: ${d.type}${d.value !== undefined ? " (" + d.value + ")" : ""}`,
                 action: "get_chosen_die",
-                value: { ...die },
-                visual: { type: "die", dieData: { ...die } },
+                value: { ...d },
+                visual: { type: "die", dieData: { ...d } },
               });
-              offeredSignatures.add(signature);
+              sigs.add(sig);
             }
           }
           this.choiceDetails = {
             type: "pick_a_die",
-            message: `Choose a die (${finalDiceOptions.length} options):`,
-            options: finalDiceOptions,
+            message: `Choose a die (${finalOpts.length} options):`,
+            options: finalOpts,
           };
           effectAppliedMessage += " " + this.choiceDetails.message;
-          console.log(
-            "Store: handleSquareLanding - Set gamePhase to awaiting_choice for pick_a_die."
-          );
           break;
       }
-      // Append the specific effect message to the current gameMessage
       this.gameMessage = (this.gameMessage + " " + effectAppliedMessage).trim();
       console.log(
         "Store: handleSquareLanding - Finished. Final message:",
@@ -630,90 +641,42 @@ export const useGameStore = defineStore("game", {
     },
 
     async playerMakesChoice(chosenOption) {
-      console.log(
-        "Store: playerMakesChoice - Received option:",
-        JSON.parse(JSON.stringify(chosenOption))
-      );
-      console.log(
-        "Store: playerMakesChoice - Current state before choice: gamePhase:",
-        this.gamePhase,
-        "choiceDetails:",
-        !!this.choiceDetails,
-        "isAnimating:",
-        this.isAnimating
-      );
-
-      if (this.gamePhase !== "awaiting_choice" || !this.choiceDetails) {
-        // Removed isAnimating check here
-        console.warn("Store: playerMakesChoice - Aborted due to invalid state/phase.");
-        if (this.gamePhase !== "awaiting_choice")
-          console.warn(" - Reason: gamePhase is not 'awaiting_choice'. Is:", this.gamePhase);
-        if (!this.choiceDetails) console.warn(" - Reason: choiceDetails is null or undefined.");
-        return;
-      }
-
+      if (this.gamePhase !== "awaiting_choice" || !this.choiceDetails) return;
       this.isAnimating = true;
-      const originalSquareIndex = this.playerPosition;
-
+      const oSI = this.playerPosition;
       switch (chosenOption.action) {
         case "get_money_bonus":
           this.playerMoney += chosenOption.value;
-          this.gameMessage = `You chose money! +$${chosenOption.value}.`;
-          console.log("Store: playerMakesChoice - Money bonus applied:", chosenOption.value);
+          this.gameMessage = `Chose money! +$${chosenOption.value}.`;
           break;
         case "get_chosen_die":
-          console.log(
-            "Store: playerMakesChoice - Attempting to add die:",
-            JSON.parse(JSON.stringify(chosenOption.value))
-          );
           this.addReservedDie(chosenOption.value);
           break;
       }
-
-      if (originalSquareIndex >= 0 && originalSquareIndex < this.boardSquares.length) {
-        this.boardSquares[originalSquareIndex].currentEffectType = "none";
-        this.boardSquares[originalSquareIndex].effectDetails = null;
+      if (oSI >= 0 && oSI < this.boardSquares.length) {
+        this.boardSquares[oSI].currentEffectType = "none";
+        this.boardSquares[oSI].effectDetails = null;
       }
-
       await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(500)));
-
       this.choiceDetails = null;
       this.gamePhase = "rolling";
       this.isAnimating = false;
-      console.log(
-        "Store: playerMakesChoice - Finished. New gamePhase:",
-        this.gamePhase,
-        "Reserved dice:",
-        JSON.parse(JSON.stringify(this.reservedDice))
-      );
     },
 
+    // Boss logic is on hold for now
     async handleBossEncounter() {
-      // isAnimating should be true when this is called
-      this.gamePhase = "boss_encounter";
-      const config = this.currentStageConfig;
-      this.gameMessage = `Boss Time: ${config.bossName}!`;
-      console.log("Store: handleBossEncounter - Started. isAnimating:", this.isAnimating);
-      await new Promise((resolve) =>
-        setTimeout(resolve, this.getAnimationDelay(this.diceRollAnimationBaseDuration + 1000))
-      );
-      const bossDefeated = true;
-      if (bossDefeated) {
-        this.gameMessage = `You defeated ${config.bossName}!`;
-        await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000)));
-        await this.advanceStage();
-      } else {
-        this.gameMessage = `Defeated by ${config.bossName}! Game Over.`;
-        this.isGameOver = true;
-        this.gamePhase = "game_over";
-        this.isAnimating = false;
-      }
-      console.log(
-        "Store: handleBossEncounter - Finished. Phase:",
-        this.gamePhase,
-        "isAnimating:",
-        this.isAnimating
-      );
+      console.log("Store: Boss encounter would be triggered here. Advancing stage for now.");
+      this.gameMessage = "End of stage! Preparing next...";
+      this.isAnimating = true; // Keep isAnimating true during this transition
+      await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1500))); // Pause for message
+      await this.advanceStage();
+    },
+
+    async playerRollsForDiceFight() {
+      /* On Hold */ console.log("Player rolls for dice fight - ON HOLD");
+    },
+    async resolveBossEncounter(bossDefeated) {
+      /* On Hold */ console.log("Resolve boss encounter - ON HOLD");
     },
 
     async advanceStage() {
@@ -724,8 +687,8 @@ export const useGameStore = defineStore("game", {
         this.gamePhase = "game_won";
         this.isAnimating = false;
       } else {
-        this.setupStage();
-        this.isAnimating = false;
+        this.setupStage(); // This sets gamePhase to rolling and isAnimating to false
+        // gameMessage is set by setupStage
         this.gameMessage = `Stage ${this.playerStage} begins! ` + this.gameMessage;
       }
       console.log(
