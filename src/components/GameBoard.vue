@@ -1,7 +1,7 @@
 <!--- src/components/GameBoard.vue --->
 <script setup>
 import { storeToRefs } from "pinia"; // Not strictly needed if using gameStore directly
-import { useGameStore } from "../stores/game";
+import { useGameStore } from "@/stores/game";
 import BoardSquare from "./BoardSquare.vue";
 
 const gameStore = useGameStore();
@@ -38,13 +38,23 @@ function getSquarePositionStyle(squareId, R_from_store, C_from_store) {
 </script>
 
 <template>
-  <div class="game-board-perimeter">
-    <BoardSquare
-      v-for="square in boardSquares"
-      :key="square.id"
-      :square="square"
-      :style="getSquarePositionStyle(square.id, boardRows, boardCols)"
-    />
+  <div class="game-board-wrapper">
+      
+    <div class="game-board-perimeter">
+      <BoardSquare
+        v-for="square in boardSquares"
+        :key="square.id"
+        :square="square"
+        :style="getSquarePositionStyle(square.id, boardRows, boardCols)"
+      />
+    </div>
+    <div v-if="gameStore.gamePhase === 'boss_encounter'" class="boss-overlay">
+      <img
+        :src="`/assets/images/bosses/${gameStore.currentBoss?.image}`"
+        class="boss-image"
+        alt="Boss"
+      />
+    </div>
   </div>
 </template>
 
@@ -60,8 +70,33 @@ function getSquarePositionStyle(squareId, R_from_store, C_from_store) {
   /* margin: 20px auto; */
   background-color: #f0e0c0;
 }
+
 .game-board-perimeter {
   --board-rows: v-bind("gameStore.boardRows");
   --board-cols: v-bind("gameStore.boardCols");
+}
+
+.boss-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.boss-image {
+  max-height: 70vh;
+  max-width: 70vw;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px white);
+}
+
+.game-board-wrapper {
+  display: contents;
 }
 </style>

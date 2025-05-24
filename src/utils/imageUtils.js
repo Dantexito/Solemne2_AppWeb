@@ -42,21 +42,12 @@ export function generateDieImageFilename(die, isFromLastRoll = false) {
 }
 
 /**
- * Gets the full, resolved URL for a die image.
- * Assumes images are in src/assets/dice/
+ * Gets the public URL for a die image.
+ * Assumes images are in public/assets/images/dice/
  * @param {string} filename - The image filename (e.g., "die_d6.png")
  * @returns {string|null} The resolved image URL or null if filename is invalid.
  */
 export function getDieImageUrl(filename) {
-  if (!filename) {
-    return null;
-  }
-  try {
-    // Adjust the path relative to *this file's location* (src/utils/)
-    // to point to src/assets/dice/
-    return new URL(`../assets/dice/${filename}`, import.meta.url).href;
-  } catch (e) {
-    console.warn(`Failed to create URL for image: ${filename}`, e);
-    return null; // So we can show fallback
-  }
+  if (!filename) return null;
+  return `/assets/images/dice/${filename}`;
 }
