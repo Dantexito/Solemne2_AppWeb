@@ -1,6 +1,3 @@
-// src/stores/game.js
-// Here we got states, getters, actions,
-
 import { defineStore } from "pinia";
 
 // --- Configuration ---
@@ -17,7 +14,12 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 4,
     minChoicePickDieSquares: 2,
     maxChoicePickDieSquares: 4,
-    bossName: "Tax Collector", // Boss logic is on hold, but config is here
+    bossName: "Tax Collector",
+    bossImage: "tax_collector.png",
+    bossDefeatCondition: {
+      diceThrows: 3,
+      targetSum: 15,
+    },
   },
   2: {
     // 9x9
@@ -32,6 +34,7 @@ const STAGE_CONFIGS = {
     minChoicePickDieSquares: 4,
     maxChoicePickDieSquares: 8,
     bossName: "Greedy Goblin King",
+    bossImage: "greedy_goblin_king.webp",
   },
   3: {
     // 9x9 - example
@@ -46,6 +49,7 @@ const STAGE_CONFIGS = {
     minChoicePickDieSquares: 4,
     maxChoicePickDieSquares: 8,
     bossName: "Goblin General",
+    bossImage: "goblin_general.jpeg",
   },
   4: {
     // 12x12 - example
@@ -60,6 +64,7 @@ const STAGE_CONFIGS = {
     minChoicePickDieSquares: 8,
     maxChoicePickDieSquares: 16,
     bossName: "Dragon Treasurer",
+    bossImage: "dragon_treasurer.png",
   },
   5: {
     // 12x12
@@ -74,6 +79,7 @@ const STAGE_CONFIGS = {
     minChoicePickDieSquares: 8,
     maxChoicePickDieSquares: 16,
     bossName: "The Final Audit",
+    bossImage: "final_audit.webp",
   },
 };
 const MAX_RESERVED_DICE = 10;
@@ -124,12 +130,10 @@ export const useGameStore = defineStore("game", {
     diceRollAnimationBaseDuration: 1000, // Base duration for dice roll visual
     playerStepBaseDuration: 300, // Base duration for player moving one square
     lastPlayerPositionBeforeThisMove: 0,
-    assetsLoaded: false, // Simplified for now, set to true in initializeGame
-
-    // Boss related state (on hold for implementation, but can remain in state)
-    currentStageBoss: null,
-    currentBossMoneyRequirement: 0,
-    diceFightRolls: null,
+    assetsLoaded: false,
+    currentBoss: null,
+    currentDiceThrows: [],
+    remainingBossRolls: 0,
   }),
 
   getters: {
@@ -290,6 +294,7 @@ export const useGameStore = defineStore("game", {
           sq.effectDetails = null;
         }
       });
+      const squareIdToIndexMap = new Map(this.boardSquares.map((sq, index) => [sq.id, index]));
       let availableCandidateIds = [...this.candidateSquareIds];
       shuffleArray(availableCandidateIds);
 
@@ -297,7 +302,7 @@ export const useGameStore = defineStore("game", {
       for (let i = 0; i < numBadSquares; i++) {
         if (availableCandidateIds.length === 0) break;
         const badId = availableCandidateIds.pop();
-        const square = this.boardSquares.find((sq) => sq.id === badId);
+        const square = this.boardSquares[squareIdToIndexMap.get(badId)];
         if (square) {
           square.isTempBad = true;
           square.currentEffectType = "temp_bad_lap";
@@ -311,7 +316,7 @@ export const useGameStore = defineStore("game", {
       for (let i = 0; i < numChoiceDiceMoney; i++) {
         if (availableCandidateIds.length === 0) break;
         const choiceId = availableCandidateIds.pop();
-        const square = this.boardSquares.find((sq) => sq.id === choiceId);
+        const square = this.boardSquares[squareIdToIndexMap.get(choiceId)];
         if (square) square.currentEffectType = "choice_dice_money";
       }
       const numChoicePickDie = getRandomInt(
@@ -321,11 +326,11 @@ export const useGameStore = defineStore("game", {
       for (let i = 0; i < numChoicePickDie; i++) {
         if (availableCandidateIds.length === 0) break;
         const pickId = availableCandidateIds.pop();
-        const square = this.boardSquares.find((sq) => sq.id === pickId);
+        const square = this.boardSquares[squareIdToIndexMap.get(pickId)];
         if (square) square.currentEffectType = "choice_pick_die";
       }
       availableCandidateIds.forEach((id) => {
-        const square = this.boardSquares.find((sq) => sq.id === id);
+        const square = this.boardSquares[squareIdToIndexMap.get(id)];
         if (square) {
           const rand = Math.random();
           if (rand < 0.15) {
@@ -367,6 +372,29 @@ export const useGameStore = defineStore("game", {
     },
 
     async rollDice(reservedDieIndex = -1) {
+      if (this.gamePhase === "boss_encounter") {
+        if (this.remainingBossRolls <= 0) {
+          console.warn("Ya usaste tus 3 lanzamientos normales contra el jefe.");
+          return;
+        }
+
+        const roll = Math.ceil(Math.random() * 6);
+        this.currentDiceThrows.push(roll);
+        this.remainingBossRolls--;
+
+        this.gameMessage = `Lanzaste un ${roll}. Quedan ${this.remainingBossRolls} intento(s).`;
+
+        if (this.remainingBossRolls === 0) {
+          const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
+          if (total >= this.currentBoss.targetSum) {
+            await this.defeatBoss();
+          } else {
+            await this.failBossFight();
+          }
+        }
+
+        return;
+      }
       if (this.isGameOver || this.gamePhase !== "rolling" || this.isAnimating) {
         console.warn("RollDice: Aborted - Conditions not met or already animating.", {
           phase: this.gamePhase,
@@ -375,6 +403,7 @@ export const useGameStore = defineStore("game", {
         });
         return;
       }
+
       this.isAnimating = true;
       this.gamePhase = "dice_rolling_animation";
       let dieToRoll;
@@ -438,8 +467,10 @@ export const useGameStore = defineStore("game", {
 
       for (let i = 0; i < totalStepsToTake; i++) {
         if (this.isGameOver) break;
+
         if (direction > 0) {
           this.playerPosition = (this.playerPosition + 1) % this.totalBoardSquares;
+
           const currentSq = this.boardSquares[this.playerPosition];
           if (
             currentSq &&
@@ -459,49 +490,55 @@ export const useGameStore = defineStore("game", {
 
             await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000)));
 
-            if (this.playerLap > this.currentStageConfig.lapsToComplete) {
+            if (this.playerLap === this.currentStageConfig.lapsToComplete) {
+              this.gamePhase = "boss_encounter";
+              this.isAnimating = false;
               await this.handleBossEncounter();
-              return;
+              return; // detener inmediatamente
             } else {
               this.setupLapEffects();
               await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(500)));
             }
 
-            break; // ← Detiene el movimiento aquí al dar una vuelta
+            break; // Detiene movimiento inmediatamente al dar la vuelta.
           }
         } else {
           this.playerPosition =
             (this.playerPosition - 1 + this.totalBoardSquares) % this.totalBoardSquares;
         }
+
         await new Promise((resolve) =>
           setTimeout(resolve, this.getAnimationDelay(this.playerStepBaseDuration))
         );
       }
 
-      // After movement animation is complete
+      // --- After movement animation is complete ---
       let landedMessage = "";
+
       if (passedStartThisTurn) {
         this.gameMessage = `Completed a lap! Now on Lap ${this.playerLap}/${this.currentStageConfig.lapsToComplete}.`;
-        await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000))); // Pause for lap message
-        if (this.playerLap > this.currentStageConfig.lapsToComplete) {
-          // Boss logic on hold, so we'll just advance stage for now or end game
-          console.log("Store: movePlayer - Boss encounter would happen here.");
-          this.gameMessage = "Reached end of laps for stage!";
-          await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000)));
-          await this.advanceStage(); // Or handle actual boss logic
-          if (this.isGameOver || this.gamePhase === "game_won" || this.gamePhase === "rolling")
-            return;
+        console.log("Store: movePlayer - Lap completed processing. Current Lap:", this.playerLap);
+
+        await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1000)));
+
+        if (this.playerLap === this.currentStageConfig.lapsToComplete) {
+          this.gamePhase = "boss_encounter";
+          this.isAnimating = false;
+          await this.handleBossEncounter();
+          return; // Detener aquí mismo tras comenzar encuentro con el jefe
         } else {
-          this.setupLapEffects(); // Sets its own message
+          this.setupLapEffects();
           await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(500)));
         }
       }
 
       this.gamePhase = "landed"; // Player has landed, sprite should go to idle
+
       landedMessage = `Landed on square ${this.playerPosition}.`;
       if (moneyEarnedThisTurn > 0 && direction > 0) {
         landedMessage += ` Earned $${moneyEarnedThisTurn} this turn.`;
       }
+
       this.gameMessage = (this.gameMessage + " " + landedMessage).trim();
 
       console.log(
@@ -510,7 +547,8 @@ export const useGameStore = defineStore("game", {
         "isAnimating:",
         this.isAnimating
       );
-      this.handleSquareLanding(); // Synchronous call
+      this.handleSquareLanding();
+
       console.log(
         "Store: movePlayer - After handleSquareLanding. Phase:",
         this.gamePhase,
@@ -533,6 +571,7 @@ export const useGameStore = defineStore("game", {
         console.log("Store: movePlayer - Ended, game is over. isAnimating set to false.");
       }
     },
+
 
     handleSquareLanding() {
       if (this.isGameOver || (this.isAnimating && this.gamePhase !== "landed")) {
@@ -654,6 +693,113 @@ export const useGameStore = defineStore("game", {
       );
     },
 
+    applySquareEffect(square) {
+      switch (square.currentEffectType) {
+        case "temp_bad_lap":
+          return this.handleTempBadLap(square);
+        case "huge_money":
+          return this.handleHugeMoney(square);
+        case "choice_dice_money":
+          return this.handleChoiceDiceMoney();
+        case "choice_pick_die":
+          return this.handleChoicePickDie();
+        default:
+          return "";
+      }
+    },
+
+    handleTempBadLap(square) {
+      const penalty = square.effectDetails?.penalty || getRandomInt(5, 15) * this.playerStage;
+      this.playerMoney -= penalty;
+      return ` Stepped on a trap! Lost $${penalty}.`;
+    },
+
+    handleHugeMoney(square) {
+      const hugeGain = square.effectDetails?.amount || this.currentHugeMoneyValue;
+      this.playerMoney += hugeGain;
+      square.currentEffectType = "none";
+      square.effectDetails = null;
+      return ` Huge Money! +$${hugeGain}.`;
+    },
+
+    handleChoiceDiceMoney() {
+      this.gamePhase = "awaiting_choice";
+      let offeredDieInChoice;
+      const randDieChoice = Math.random();
+      if (randDieChoice < 0.6)
+        offeredDieInChoice = { type: DICE_TYPES.FIXED, value: getRandomInt(2, 6) };
+      else if (randDieChoice < 0.85) offeredDieInChoice = { type: DICE_TYPES.REVERSE_RANDOM };
+      else offeredDieInChoice = { type: DICE_TYPES.D20 };
+      this.choiceDetails = {
+        type: "dice_vs_money",
+        message: "Choose your reward:",
+        options: [
+          {
+            text: `Get $${10 * this.playerStage}`,
+            action: "get_money_bonus",
+            value: 10 * this.playerStage,
+            visual: { type: "money" },
+          },
+          {
+            text: `Get a ${offeredDieInChoice.type}${
+              offeredDieInChoice.value ? " (" + offeredDieInChoice.value + ")" : ""
+            } Die`,
+            action: "get_chosen_die",
+            value: offeredDieInChoice,
+            visual: { type: "die", dieData: offeredDieInChoice },
+          },
+        ],
+      };
+      console.log(
+        "Store: handleSquareLanding - Set gamePhase to awaiting_choice for dice_vs_money."
+      );
+      return " " + this.choiceDetails.message;
+    },
+
+    handleChoicePickDie() {
+      this.gamePhase = "awaiting_choice";
+      const dicePool = [
+        { type: DICE_TYPES.FIXED, value: 1 },
+        { type: DICE_TYPES.FIXED, value: 2 },
+        { type: DICE_TYPES.FIXED, value: 3 },
+        { type: DICE_TYPES.FIXED, value: 4 },
+        { type: DICE_TYPES.FIXED, value: 5 },
+        { type: DICE_TYPES.FIXED, value: 6 },
+        { type: DICE_TYPES.D20 },
+        { type: DICE_TYPES.REVERSE_RANDOM },
+        { type: DICE_TYPES.REVERSE_FIXED, value: getRandomInt(1, 6) },
+        { type: DICE_TYPES.NORMAL },
+      ];
+      shuffleArray(dicePool);
+      const numDiceToOffer = getRandomInt(3, 4);
+      const finalDiceOptions = [];
+      const offeredSignatures = new Set();
+      for (const die of dicePool) {
+        if (finalDiceOptions.length >= numDiceToOffer) break;
+        let signature = die.type;
+        if (die.type === DICE_TYPES.FIXED || die.type === DICE_TYPES.REVERSE_FIXED)
+          signature += `_${die.value}`;
+        if (!offeredSignatures.has(signature)) {
+          finalDiceOptions.push({
+            text: `Die: ${die.type}${die.value !== undefined ? " (" + die.value + ")" : ""}`,
+            action: "get_chosen_die",
+            value: { ...die },
+            visual: { type: "die", dieData: { ...die } },
+          });
+          offeredSignatures.add(signature);
+        }
+      }
+      this.choiceDetails = {
+        type: "pick_a_die",
+        message: `Choose a die (${finalDiceOptions.length} options):`,
+        options: finalDiceOptions,
+      };
+      console.log(
+        "Store: handleSquareLanding - Set gamePhase to awaiting_choice for pick_a_die."
+      );
+      return " " + this.choiceDetails.message;
+    },
+
     async playerMakesChoice(chosenOption) {
       if (this.gamePhase !== "awaiting_choice" || !this.choiceDetails) return;
       this.isAnimating = true;
@@ -677,21 +823,114 @@ export const useGameStore = defineStore("game", {
       this.isAnimating = false;
     },
 
-    // Boss logic is on hold for now
+    // --- Boss Actions from MAIN branch ---
     async handleBossEncounter() {
-      console.log("Store: Boss encounter would be triggered here. Advancing stage for now.");
-      this.gameMessage = "End of stage! Preparing next...";
-      this.isAnimating = true; // Keep isAnimating true during this transition
-      await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(1500))); // Pause for message
-      await this.advanceStage();
+      console.log("Store: Boss Encounter Initiated");
+      this.gamePhase = "boss_encounter"; // Main phase for boss
+      this.isAnimating = false; // Allow UI interaction for boss if needed immediately
+
+      // currentBoss should have been set in setupStage from STAGE_CONFIGS
+      if (!this.currentBoss || !this.currentBoss.defeatCondition) {
+        console.error("Boss data or defeat condition missing!", this.currentBoss);
+        await this.defeatBoss(); // Default to win if boss is misconfigured
+        return;
+      }
+      this.gameMessage = `¡Te enfrentas a ${this.currentBoss.name}! Necesitas ${this.currentBoss.defeatCondition.targetSum} en ${this.currentBoss.defeatCondition.diceThrows} lanzamientos.`;
+      this.currentDiceThrows = [];
+      this.remainingBossRolls = this.currentBoss.defeatCondition.diceThrows;
+      // UI should now show options to roll dice for boss
     },
 
-    async playerRollsForDiceFight() {
-      /* On Hold */ console.log("Player rolls for dice fight - ON HOLD");
+    async rollDiceForBoss(reservedDieIndex = -1) { // Allow using reserved dice for boss
+      if (this.gamePhase !== "boss_encounter" || this.remainingBossRolls <= 0 || this.isAnimating) return;
+
+      this.isAnimating = true; // For the roll animation
+      let dieToRoll;
+      let originalTypeForLastRoll;
+
+      if (reservedDieIndex >=0 && reservedDieIndex < this.reservedDice.length) {
+          dieToRoll = this.reservedDice.splice(reservedDieIndex, 1)[0];
+          originalTypeForLastRoll = dieToRoll.type;
+          this.gameMessage = `Using ${originalTypeForLastRoll} die for boss...`;
+      } else {
+          dieToRoll = { type: DICE_TYPES.NORMAL }; // Default normal D6 for boss fight
+          originalTypeForLastRoll = DICE_TYPES.NORMAL;
+          this.gameMessage = "Rolling normal D6 for boss...";
+      }
+
+      await new Promise(r => setTimeout(r, this.getAnimationDelay(this.diceRollAnimationBaseDuration)));
+
+      let roll;
+      // Use rollCustomDie for consistency, even for normal
+      roll = await this.rollCustomDie(dieToRoll); // rollCustomDie handles different types
+
+      this.currentDiceThrows.push(roll);
+      this.remainingBossRolls--;
+      this.lastDiceRoll = { value: roll, type: originalTypeForLastRoll, originalType: originalTypeForLastRoll, direction: 'boss_fight' };
+
+
+      this.gameMessage = `Lanzaste un ${roll}. Suma: ${this.currentDiceThrows.reduce((a,b)=>a+b,0)}. Quedan ${this.remainingBossRolls} intento(s).`;
+      this.isAnimating = false; // Allow next roll or resolution
+
+      if (this.remainingBossRolls === 0) {
+        this.isAnimating = true; // For resolving animation
+        await new Promise(r => setTimeout(r, this.getAnimationDelay(1000))); // Pause before result
+        const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
+        if (total >= this.currentBoss.defeatCondition.targetSum) {
+          await this.defeatBoss();
+        } else {
+          await this.failBossFight();
+        }
+      }
     },
-    async resolveBossEncounter(bossDefeated) {
-      /* On Hold */ console.log("Resolve boss encounter - ON HOLD");
+
+    async rollCustomDie(die) { // From MAIN
+      // This function should return the numerical result of the roll
+      let result;
+      switch (die.type) {
+        case DICE_TYPES.FIXED:
+          result = die.value || 1; // Ensure value if fixed
+          break;
+        case DICE_TYPES.REVERSE_RANDOM: // Example: 1-6 but counts as negative or special
+          result = getRandomInt(1, 6); // For boss, usually positive outcome desired
+          // Or if it means "bad" roll: result = -(getRandomInt(1,6));
+          break;
+        case DICE_TYPES.D20:
+          result = getRandomInt(1,20);
+          break;
+        // Add other dice types from your DICE_TYPES if they have specific roll mechanics
+        default: // Includes DICE_TYPES.NORMAL
+          result = getRandomInt(1, 6);
+      }
+      return result;
     },
+
+    async defeatBoss() { // From MAIN
+      this.gameMessage = `¡Has derrotado a ${this.currentBoss.name}!`;
+      // alert is jarring, use gameMessage and delays
+      await new Promise(r => setTimeout(r, this.getAnimationDelay(1500)));
+      if (this.playerStage < MAX_STAGES) { // Use MAX_STAGES
+        this.playerStage++;
+        await this.setupStage(); // This sets gamePhase to rolling and isAnimating to false
+      } else {
+        this.gameMessage = "¡Juego terminado! Has derrotado a todos los jefes.";
+        this.gamePhase = "game_won";
+        this.isGameOver = true;
+        this.isAnimating = false;
+      }
+    },
+
+    async failBossFight() { // From MAIN
+      this.gameMessage = `¡Fallaste! No lograste derrotar a ${this.currentBoss.name}. Vuelve a intentarlo al completar otra vuelta.`;
+      // alert is jarring
+      await new Promise(r => setTimeout(r, this.getAnimationDelay(1500)));
+      this.gamePhase = "rolling"; // Player gets another chance after next lap
+      this.isAnimating = false;
+      this.playerLap--; // Effectively, they didn't complete the "boss lap"
+      this.currentDiceThrows = []; // Reset throws for next attempt
+      // No, don't reset remainingBossRolls here, setupStage/handleBossEncounter will do it.
+    },
+    // advanceStage is now part of defeatBoss or if game ends
 
     async advanceStage() {
       this.playerStage++;
