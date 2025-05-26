@@ -10,6 +10,9 @@ const props = defineProps({
 });
 
 const gameStore = useGameStore();
+const isHighlighted = computed(() => {
+  return gameStore.highlightedTargetSquare === props.square.id;
+});
 
 // This computed property is for highlighting the square itself,
 // not for drawing the player marker (which is now a separate PlayerSprite component).
@@ -92,7 +95,16 @@ const squareClasses = computed(() => ({
 </script>
 
 <template>
-  <div class="board-square" :class="squareClasses">
+  <div
+    class="board-square"
+    :class="[
+      square.baseType,
+      square.currentEffectType,
+      { highlighted: isHighlighted, active: isPlayerCurrentlyOnThisSquare }
+    ]"
+  >
+
+
     <div class="square-id-container">
       <span class="square-id">{{ square.id }}</span>
     </div>
@@ -169,6 +181,7 @@ const squareClasses = computed(() => ({
   text-align: left; /* Position ID to the top-left */
   padding-left: 2px;
 }
+
 .square-id {
   font-weight: bold;
   color: #555;
@@ -186,6 +199,7 @@ const squareClasses = computed(() => ({
   z-index: 2;
   overflow: visible;
 }
+
 .icon-display {
   margin: 0 1px; /* Space between multiple icons if any */
 }
@@ -194,9 +208,45 @@ const squareClasses = computed(() => ({
   min-height: 12px; /* Reserve space for text */
   width: 100%;
 }
+
 .effect-text {
   font-size: 10px;
   font-weight: 500;
   color: #333;
 }
+
+.highlighted {
+  border: 2px dashed #00f; /* Azul */
+  box-shadow: 0 0 10px rgba(0, 0, 255, 0.6);
+}
+
+.board-square.start {
+  background-color: lightgray;
+}
+
+.board-square.normal_money {
+  background-color: lightgreen;
+}
+
+.board-square.bad {
+  background-color: #f88;
+}
+
+.board-square.choice_dice_money {
+  background-color: gold;
+}
+
+.board-square.choice_pick_die {
+  background-color: #add8e6;
+}
+
+.board-square.highlighted {
+  border: 2px dashed #00f;
+  box-shadow: 0 0 8px rgba(0, 0, 255, 0.5);
+}
+
+.board-square.active {
+  border: 2px solid yellow;
+}
+
 </style>

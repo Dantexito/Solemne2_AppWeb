@@ -138,15 +138,28 @@ const bossImageUrl = computed(() => {
         :style="staticPlayerMarkerStyle"
       />
     </div>
-    <div v-if="gamePhase === 'boss_encounter' && currentBoss" class="boss-overlay">
-      <img
-        v-if="bossImageUrl"
-        :src="bossImageUrl"
-        class="boss-image"
-        alt="Boss"
-      />
-      <p v-else class="boss-name-fallback">{{ currentBoss.name || 'A Fearsome Boss' }}</p>
+    <div
+  v-if="gameStore.gamePhase === 'boss_encounter'"
+  class="boss-overlay-inside-board"
+>
+  <div class="boss-wrapper animated-boss">
+    <img
+      :src="`/assets/images/bosses/${gameStore.currentBoss?.image}`"
+      class="boss-image-inside"
+      alt="Boss"
+    />
+
+    <!-- 🎲 Número del dado lanzado -->
+    <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
+      🎲 {{ gameStore.bossLastRoll }}
     </div>
+    <div class="boss-counters">
+      <p><strong>🎲 Dados restantes:</strong> {{ gameStore.remainingBossRolls }}</p>
+      <p><strong>💥 Total acumulado:</strong> {{ gameStore.currentDiceThrows.reduce((a, b) => a + b, 0) }}</p>
+    </div>
+  </div>
+</div>
+
   </div>
 </template>
 
@@ -178,33 +191,79 @@ const bossImageUrl = computed(() => {
   /* zIndex and positioning are handled by inline style */
 }
 
-.boss-overlay {
+.boss-overlay-inside-board {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.65); /* Semi-transparent dark overlay */
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.boss-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  z-index: 20; /* Ensure boss is on top of player and board */
-  border-radius: calc(3px + var(--board-cols, 6) * 0.5px); /* Match board border somewhat */
+  gap: 15px;
+  filter: drop-shadow(0 0 15px white);
 }
 
-.boss-image {
-  max-width: 80%;
-  max-height: 80%;
+.boss-image-inside {
+  max-width: 60%;
+  max-height: 70%;
   object-fit: contain;
-  border: 3px solid gold;
-  border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
 }
-.boss-name-fallback {
-    color: white;
-    font-size: 1.5em;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px black;
+
+.boss-counters {
+  color: white;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  text-align: center;
 }
+
+@keyframes bossEntrance {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animated-boss {
+  animation: bossEntrance 0.6s ease-out;
+}
+.boss-die-result {
+  font-size: 4rem;
+  font-weight: bold;
+  color: white;
+  margin-top: 10px;
+  animation: pop-in 0.8s ease-out;
+  text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 </style>
