@@ -118,60 +118,54 @@ const squareClasses = computed(() => ({
 </template>
 
 <style scoped>
-/* Overall style for each square on the board */
 .board-square {
-  border: 1px solid #a07040; /* Brownish border, change border thickness of the square */
+  border: 1px solid #a07040; /* Brownish border */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between; /* Distribute space for ID, icons, text */
-  padding: 4px; /* Change padding for more or less internal spacing in the larger square */
-  font-size: 11px; /* Base font size within the square */
-  position: relative;
+  padding: 2px;
+  font-size: 9px;
+  position: relative; /* Important for child positioning if any */
   background-color: #fff8e8; /* Lighter square color */
   box-sizing: border-box;
   overflow: visible;
   text-align: center;
-  width: 75px; /* Explicitly set width for the new square size */
-  height: 75px; /* Explicitly set height for the new square size */
+  min-height: 55px; /* Ensure consistent height for grid alignment */
   z-index: 0;
 }
 
 /* Highlight for the square the player is currently on */
 .player-is-on-this-square {
-  /* UPDATED: Made the outline thicker for better visibility on a larger square */
-  outline: 4px solid gold !important;
-  /* UPDATED: Slightly increased the glow effect */
-  box-shadow: 0 0 12px gold;
+  outline: 3px solid gold !important; /* Using !important to ensure it overrides other backgrounds if needed */
+  box-shadow: 0 0 10px gold; /* Glow effect */
   position: relative;
-  z-index: 2;
+  z-index: 2; /* Ensure highlight is visible if other elements overlap slightly */
 }
 
 /* Specific styling for different types of squares */
 .temp-bad {
-  background-color: #a73737;
+  background-color: #a73737; /* Dark red for traps */
   color: white;
-  /* UPDATED: Slightly thicker border for consistency if desired, or keep as is */
-  /* border-color: darkred; */ /* Kept original, adjust if needed */
+  border-color: darkred;
 }
 .temp-bad .icon-display,
 .temp-bad .effect-text {
-  color: white;
+  color: white; /* Ensure text and icons are visible on dark background */
 }
 .corner-br {
-  background-color: #ffcccc;
-  /* UPDATED: Slightly thicker border for consistency if desired, or keep as is */
-  /* border: 2px solid red; */ /* Kept original, adjust if needed */
+  /* Specific bad corner (bottom-right) */
+  background-color: #ffcccc; /* Light red */
+  border: 2px solid red;
 }
 .corner {
-  background-color: #e0e0e0;
-  /* UPDATED: Slightly thicker border for consistency if desired, or keep as is */
-  /* border-width: 2px; */ /* Kept original, adjust if needed */
+  /* Generic styling for other corners */
+  background-color: #e0e0e0; /* Light grey */
+  border-width: 2px;
 }
 .start-square {
-  background-color: #c0ffc0;
-  /* UPDATED: Slightly thicker border for consistency if desired, or keep as is */
-  /* border: 2px solid green; */ /* Kept original, adjust if needed */
+  background-color: #c0ffc0; /* Light green */
+  border: 2px solid green;
 }
 .effect-huge-money {
   background-color: gold;
@@ -182,16 +176,14 @@ const squareClasses = computed(() => ({
 
 .square-id-container {
   width: 100%;
-  text-align: left;
-  /* UPDATED: Adjusted padding slightly if needed due to overall padding change in .board-square */
-  padding-left: 2px; /* Kept original, adjust if needed */
+  text-align: left; /* Position ID to the top-left */
+  padding-left: 2px;
 }
 
 .square-id {
   font-weight: bold;
   color: #555;
-  /* UPDATED: Increased font size for the square ID */
-  font-size: 12px;
+  font-size: 10px;
   z-index: 2;
 }
 
@@ -199,36 +191,30 @@ const squareClasses = computed(() => ({
   display: flex;
   justify-content: center;
   align-items: center;
-  /* UPDATED: Increased font size for icons (emojis) */
-  font-size: 20px;
-  /* UPDATED: Adjusted margin for better spacing with larger icons */
-  margin: 2px 0;
-  /* UPDATED: Increased min-height to reserve more space for larger icons */
-  min-height: 22px;
+  font-size: 16px; /* Emoji size */
+  margin: 1px 0;
+  min-height: 18px; /* Reserve space for icons */
   z-index: 2;
   overflow: visible;
 }
 
 .icon-display {
-  /* UPDATED: Adjusted margin between icons if multiple are present */
-  margin: 0 2px;
+  margin: 0 1px; /* Space between multiple icons if any */
 }
 
 .text-container {
-  /* UPDATED: Increased min-height to reserve more space for potentially larger text */
-  min-height: 15px;
+  min-height: 12px; /* Reserve space for text */
   width: 100%;
 }
 
 .effect-text {
-  /* UPDATED: Increased font size for effect text */
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   color: #333;
 }
 
 .highlighted {
-  /* border: 2px dashed #00f; */ /* Kept original, adjust if needed */
+  border: 2px dashed #00f; /* Azul */
   box-shadow: 0 0 10px rgba(0, 0, 255, 0.6);
 }
 
@@ -253,11 +239,11 @@ const squareClasses = computed(() => ({
 }
 
 .board-square.highlighted {
-  /* border: 2px dashed #00f; */ /* Kept original, adjust if needed */
+  border: 2px dashed #00f;
   box-shadow: 0 0 8px rgba(0, 0, 255, 0.5);
 }
 
 .board-square.active {
-  /* border: 2px solid yellow; */ /* Kept original, adjust if needed */
+  border: 2px solid yellow;
 }
 </style>

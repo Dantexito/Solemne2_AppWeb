@@ -19,10 +19,8 @@ const {
 
 // URL for the static player image in the display panel
 // Assuming knight_static.png is in src/assets/sprites/
-const staticPlayerDisplayImageUrl = new URL(
-  "/assets/images/sprites/knight_static.png",
-  import.meta.url
-).href;
+const staticPlayerDisplayImageUrl = new URL("/assets/sprites/knight_static.png", import.meta.url)
+  .href;
 
 onMounted(() => {
   gameStore.initializeGame();
@@ -130,7 +128,7 @@ function handleToggleSpeed() {
   gap: 20px;
   justify-content: center;
   width: 100%;
-  max-width: 1250px; /* This might need adjustment if the board becomes significantly wider */
+  max-width: 1250px;
 }
 
 .left-panel-area {
@@ -138,7 +136,7 @@ function handleToggleSpeed() {
   flex-direction: column;
   align-items: center;
   gap: 15px;
-  width: 260px; /* Consider if this needs to be wider for larger text */
+  width: 260px;
   min-width: 230px;
 }
 
@@ -155,24 +153,26 @@ function handleToggleSpeed() {
   box-sizing: border-box;
 }
 
+/* New styles for the large static player image */
 .large-static-player-image {
-  width: 160px;
-  height: 152px;
-  object-fit: contain;
-  image-rendering: pixelated;
+  width: 160px; /* Example "big" size, adjust as needed */
+  height: 152px; /* Example "big" size, adjust for aspect ratio if not square */
+  object-fit: contain; /* Or 'cover', depending on image and desired look */
+  image-rendering: pixelated; /* Good for pixel art if it is */
   margin-bottom: 10px;
-  border: 2px solid #778899;
+  border: 2px solid #778899; /* Light slate gray border */
   border-radius: 4px;
-  background-color: #ffffff;
+  background-color: #ffffff; /* White background if image has transparency */
 }
 
 .player-name {
-  font-size: 1.3em; /* Player name font size */
+  font-size: 1.2em;
   font-weight: bold;
   color: #2c3e50;
   margin-top: 5px;
-  margin-bottom: 0;
+  margin-bottom: 0; /* Removed bottom margin for tighter look */
 }
+/* --- End of New Styles --- */
 
 .game-info-content {
   padding: 15px;
@@ -182,7 +182,6 @@ function handleToggleSpeed() {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
   width: 100%;
   box-sizing: border-box;
-  /* font-size: 11px */
 }
 
 .game-board-container {
@@ -196,7 +195,7 @@ function handleToggleSpeed() {
   flex-direction: column;
   align-items: stretch;
   gap: 15px;
-  min-width: 170px; /* Consider if this needs to be wider */
+  min-width: 170px;
   max-width: 200px;
 }
 
@@ -220,7 +219,7 @@ function handleToggleSpeed() {
 .speed-button {
   width: 100%;
   padding: 10px 10px;
-  font-size: 1em; /* button font size */
+  font-size: 0.9em;
   font-weight: bold;
   cursor: pointer;
   color: white;
