@@ -19,7 +19,8 @@ const STAGE_CONFIGS = {
     bossImage: "tax_collector.png",
     bossDefeatCondition: {
       diceThrows: 3,
-      targetSum: 15,
+      hp: 15,
+      bribeCost: 30,
     },
   },
   2: {
@@ -38,7 +39,7 @@ const STAGE_CONFIGS = {
     bossImage: "greedy_goblin_king.webp",
     bossDefeatCondition: {
       diceThrows: 3,
-      targetSum: 30,
+      hp: 30,
     },
   },
   3: {
@@ -57,7 +58,7 @@ const STAGE_CONFIGS = {
     bossImage: "goblin_general.jpeg",
     bossDefeatCondition: {
       diceThrows: 3,
-      targetSum: 40,
+      hp: 40,
     },
   },
   4: {
@@ -76,7 +77,7 @@ const STAGE_CONFIGS = {
     bossImage: "dragon_treasurer.png",
     bossDefeatCondition: {
       diceThrows: 3,
-      targetSum: 50,
+      hp: 50,
     },
   },
   5: {
@@ -95,7 +96,7 @@ const STAGE_CONFIGS = {
     bossImage: "dark_godcat.webp",
     bossDefeatCondition: {
       diceThrows: 3,
-      targetSum: 70,
+      hp: 70,
     },
   },
 };
@@ -156,6 +157,8 @@ export const useGameStore = defineStore("game", {
     currentDiceThrows: [],
     remainingBossRolls: 0,
     bossLastRoll: null,
+    currentBossHP: null, // Current HP of the boss during the fight
+    currentBossMaxHP: null, // Max HP of the boss during the fight
 
     // Game summary state
     totalRolls: 0, // Cuenta cuántos dados ha lanzado el jugador en total
@@ -412,7 +415,7 @@ export const useGameStore = defineStore("game", {
         const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
 
         // ✅ Derrotar inmediatamente si se alcanza la suma
-        if (total >= this.currentBoss.targetSum) {
+        if (total >= this.currentBoss.hp) {
           await this.defeatBoss();
           return;
         }
@@ -901,11 +904,38 @@ export const useGameStore = defineStore("game", {
       this.currentBoss = {
         ...stageConfig.bossDefeatCondition,
         image: stageConfig.bossImage,
+        name: stageConfig.bossName,
       };
-      this.remainingBossRolls = this.currentBoss.diceThrows; // ← esta línea es CLAVE
+
+      this.remainingBossRolls = this.currentBoss.diceThrows;
+      this.currentBossHP = this.currentBoss.hp;
+      this.currentBossMaxHP = this.currentBoss.hp;
       this.currentDiceThrows = [];
       this.gamePhase = "boss_encounter";
       this.isAnimating = false;
+    },
+
+    applyBossDamage(totalDiceValue) {
+      if (this.currentBossHP == null) return;
+
+      this.currentBossHP -= totalDiceValue;
+      if (this.currentBossHP <= 0) {
+        this.defeatBoss(); // Aquí puedes cambiar de fase, mostrar victoria, etc.
+      }
+    },
+
+    payToDefeatBoss() {
+      if (!this.currentBoss || this.currentBoss.bribeCost == null) return;
+
+      const bribe = Number(this.currentBoss.bribeCost);
+      const currentMoney = this.playerMoney;
+
+      if (currentMoney >= bribe) {
+        this.playerMoney -= bribe;
+        this.defeatBoss();
+      } else {
+        alert("No tienes suficiente dinero para pagarle al jefe.");
+      }
     },
 
     async rollDiceForBoss(die) {
@@ -930,7 +960,7 @@ export const useGameStore = defineStore("game", {
       const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
 
       // ✅ Si ya alcanza el total, no esperar más
-      if (total >= this.currentBoss.targetSum) {
+      if (total >= this.currentBoss.hp) {
         await this.defeatBoss();
         return;
       }

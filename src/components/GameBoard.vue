@@ -157,31 +157,35 @@ const bossImageUrl = computed(() => {
         :style="staticPlayerMarkerStyle"
       />
     </div>
+    
+
     <div v-if="gameStore.gamePhase === 'boss_encounter'" class="boss-overlay-inside-board">
-      <div class="boss-wrapper animated-boss">
-        <img
-  v-if="bossImageUrl"
-  :src="bossImageUrl"
-  alt="Boss"
-  class="boss-image"
-/>
+  <div class="boss-wrapper animated-boss">
+    <h2 class="boss-name">{{ gameStore.currentBoss?.name }}</h2>
+    <img
+      v-if="bossImageUrl"
+      :src="bossImageUrl"
+      alt="Boss"
+      class="boss-image"
+    />
 
+    <p class="boss-hp-text">
+      ❤️ Vida del jefe: {{ gameStore.currentBossHP }} / {{ gameStore.currentBossMaxHP }}
+    </p>
 
+    <button class="pay-boss-button" @click="gameStore.payToDefeatBoss">
+      💰 Pagar {{ gameStore.currentBoss?.bribeCost || "??" }} monedas para derrotar al jefe
+    </button>
 
-<source>
-        <!-- 🎲 Número del dado lanzado -->
-        <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
-          🎲 {{ gameStore.bossLastRoll }}
-        </div>
-        <div class="boss-counters">
-          <p><strong>🎲 Dados restantes:</strong> {{ gameStore.remainingBossRolls }}</p>
-          <p>
-            <strong>💥 Total acumulado:</strong>
-            {{ gameStore.currentDiceThrows.reduce((a, b) => a + b, 0) }}
-          </p>
-        </div>
-      </div>
+    <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
+      🎲 {{ gameStore.bossLastRoll }}
     </div>
+    <div class="boss-counters">
+      <p><strong>🎲 Dados restantes:</strong> {{ gameStore.remainingBossRolls }}</p>
+    </div>
+  </div>
+</div>
+
   </div>
 </template>
 
@@ -243,7 +247,9 @@ const bossImageUrl = computed(() => {
   border-radius: 12px;
   font-size: 1.1rem;
   text-align: center;
+  margin-top: 7px; /* 👈 Añade esto */
 }
+
 
 @keyframes bossEntrance {
   0% {
@@ -291,5 +297,48 @@ const bossImageUrl = computed(() => {
   display: block;
   margin: 0 auto;
 }
+
+.boss-hp-text {
+  color: white;
+  font-size: 1.1rem;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 8px 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.pay-boss-button {
+  background-color: #f3b73c;
+  color: #000;
+  padding: 4px 6px;
+  font-size: 0.95rem;
+  max-width: 240px;
+  text-align: center;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s, box-shadow 0.2s;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.pay-boss-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px #fff;
+}
+.boss-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 8px #000;
+  margin: 0;
+  max-width: 90%;
+  text-align: center;
+  word-wrap: break-word;
+}
+
+
 
 </style>
