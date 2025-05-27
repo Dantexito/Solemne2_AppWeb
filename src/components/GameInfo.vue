@@ -21,8 +21,8 @@ const {
       Stage: {{ playerStage }} | Lap: {{ playerLap }} /
       {{ currentStageConfig?.lapsToComplete || 3 }}
     </h3>
-    <p>Position: {{ playerPosition }}</p>
-    <p>Money: ${{ playerMoney }}</p>
+    <p>⬇️Posición: {{ playerPosition }}</p>
+    <p>🪙Dinero: ${{ playerMoney }}</p>
     <hr />
     <div class="debug-info">
       <p v-if="lastDiceRoll">

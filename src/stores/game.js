@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 
 // --- Configuration ---
+
 const STAGE_CONFIGS = {
   1: {
     // 6x6
@@ -14,7 +15,7 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 4,
     minChoicePickDieSquares: 2,
     maxChoicePickDieSquares: 4,
-    bossName: "Tax Collector",
+    bossName: "Recaudador de Impuestos",
     bossImage: "tax_collector.png",
     bossDefeatCondition: {
       diceThrows: 3,
@@ -33,7 +34,7 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 8,
     minChoicePickDieSquares: 4,
     maxChoicePickDieSquares: 8,
-    bossName: "Greedy Goblin King",
+    bossName: "Goblin Codicioso",
     bossImage: "greedy_goblin_king.webp",
   },
   3: {
@@ -48,7 +49,7 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 8,
     minChoicePickDieSquares: 4,
     maxChoicePickDieSquares: 8,
-    bossName: "Goblin General",
+    bossName: "Comandante Goblin",
     bossImage: "goblin_general.jpeg",
   },
   4: {
@@ -63,7 +64,7 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 16,
     minChoicePickDieSquares: 8,
     maxChoicePickDieSquares: 16,
-    bossName: "Dragon Treasurer",
+    bossName: "Dragón Tesorero",
     bossImage: "dragon_treasurer.png",
   },
   5: {
@@ -78,8 +79,8 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 16,
     minChoicePickDieSquares: 8,
     maxChoicePickDieSquares: 16,
-    bossName: "The Final Audit",
-    bossImage: "final_audit.webp",
+    bossName: "Gato Dios Oscuro",
+    bossImage: "dark_godcat.webp",
   },
 };
 const MAX_RESERVED_DICE = 10;
@@ -572,7 +573,6 @@ export const useGameStore = defineStore("game", {
       }
     },
 
-
     handleSquareLanding() {
       if (this.isGameOver || (this.isAnimating && this.gamePhase !== "landed")) {
         console.warn("Store: handleSquareLanding - Aborted.", {
@@ -794,9 +794,7 @@ export const useGameStore = defineStore("game", {
         message: `Choose a die (${finalDiceOptions.length} options):`,
         options: finalDiceOptions,
       };
-      console.log(
-        "Store: handleSquareLanding - Set gamePhase to awaiting_choice for pick_a_die."
-      );
+      console.log("Store: handleSquareLanding - Set gamePhase to awaiting_choice for pick_a_die.");
       return " " + this.choiceDetails.message;
     },
 
@@ -841,24 +839,28 @@ export const useGameStore = defineStore("game", {
       // UI should now show options to roll dice for boss
     },
 
-    async rollDiceForBoss(reservedDieIndex = -1) { // Allow using reserved dice for boss
-      if (this.gamePhase !== "boss_encounter" || this.remainingBossRolls <= 0 || this.isAnimating) return;
+    async rollDiceForBoss(reservedDieIndex = -1) {
+      // Allow using reserved dice for boss
+      if (this.gamePhase !== "boss_encounter" || this.remainingBossRolls <= 0 || this.isAnimating)
+        return;
 
       this.isAnimating = true; // For the roll animation
       let dieToRoll;
       let originalTypeForLastRoll;
 
-      if (reservedDieIndex >=0 && reservedDieIndex < this.reservedDice.length) {
-          dieToRoll = this.reservedDice.splice(reservedDieIndex, 1)[0];
-          originalTypeForLastRoll = dieToRoll.type;
-          this.gameMessage = `Using ${originalTypeForLastRoll} die for boss...`;
+      if (reservedDieIndex >= 0 && reservedDieIndex < this.reservedDice.length) {
+        dieToRoll = this.reservedDice.splice(reservedDieIndex, 1)[0];
+        originalTypeForLastRoll = dieToRoll.type;
+        this.gameMessage = `Using ${originalTypeForLastRoll} die for boss...`;
       } else {
-          dieToRoll = { type: DICE_TYPES.NORMAL }; // Default normal D6 for boss fight
-          originalTypeForLastRoll = DICE_TYPES.NORMAL;
-          this.gameMessage = "Rolling normal D6 for boss...";
+        dieToRoll = { type: DICE_TYPES.NORMAL }; // Default normal D6 for boss fight
+        originalTypeForLastRoll = DICE_TYPES.NORMAL;
+        this.gameMessage = "Rolling normal D6 for boss...";
       }
 
-      await new Promise(r => setTimeout(r, this.getAnimationDelay(this.diceRollAnimationBaseDuration)));
+      await new Promise((r) =>
+        setTimeout(r, this.getAnimationDelay(this.diceRollAnimationBaseDuration))
+      );
 
       let roll;
       // Use rollCustomDie for consistency, even for normal
@@ -866,15 +868,22 @@ export const useGameStore = defineStore("game", {
 
       this.currentDiceThrows.push(roll);
       this.remainingBossRolls--;
-      this.lastDiceRoll = { value: roll, type: originalTypeForLastRoll, originalType: originalTypeForLastRoll, direction: 'boss_fight' };
+      this.lastDiceRoll = {
+        value: roll,
+        type: originalTypeForLastRoll,
+        originalType: originalTypeForLastRoll,
+        direction: "boss_fight",
+      };
 
-
-      this.gameMessage = `Lanzaste un ${roll}. Suma: ${this.currentDiceThrows.reduce((a,b)=>a+b,0)}. Quedan ${this.remainingBossRolls} intento(s).`;
+      this.gameMessage = `Lanzaste un ${roll}. Suma: ${this.currentDiceThrows.reduce(
+        (a, b) => a + b,
+        0
+      )}. Quedan ${this.remainingBossRolls} intento(s).`;
       this.isAnimating = false; // Allow next roll or resolution
 
       if (this.remainingBossRolls === 0) {
         this.isAnimating = true; // For resolving animation
-        await new Promise(r => setTimeout(r, this.getAnimationDelay(1000))); // Pause before result
+        await new Promise((r) => setTimeout(r, this.getAnimationDelay(1000))); // Pause before result
         const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
         if (total >= this.currentBoss.defeatCondition.targetSum) {
           await this.defeatBoss();
@@ -884,7 +893,8 @@ export const useGameStore = defineStore("game", {
       }
     },
 
-    async rollCustomDie(die) { // From MAIN
+    async rollCustomDie(die) {
+      // From MAIN
       // This function should return the numerical result of the roll
       let result;
       switch (die.type) {
@@ -896,7 +906,7 @@ export const useGameStore = defineStore("game", {
           // Or if it means "bad" roll: result = -(getRandomInt(1,6));
           break;
         case DICE_TYPES.D20:
-          result = getRandomInt(1,20);
+          result = getRandomInt(1, 20);
           break;
         // Add other dice types from your DICE_TYPES if they have specific roll mechanics
         default: // Includes DICE_TYPES.NORMAL
@@ -905,11 +915,13 @@ export const useGameStore = defineStore("game", {
       return result;
     },
 
-    async defeatBoss() { // From MAIN
+    async defeatBoss() {
+      // From MAIN
       this.gameMessage = `¡Has derrotado a ${this.currentBoss.name}!`;
       // alert is jarring, use gameMessage and delays
-      await new Promise(r => setTimeout(r, this.getAnimationDelay(1500)));
-      if (this.playerStage < MAX_STAGES) { // Use MAX_STAGES
+      await new Promise((r) => setTimeout(r, this.getAnimationDelay(1500)));
+      if (this.playerStage < MAX_STAGES) {
+        // Use MAX_STAGES
         this.playerStage++;
         await this.setupStage(); // This sets gamePhase to rolling and isAnimating to false
       } else {
@@ -920,10 +932,11 @@ export const useGameStore = defineStore("game", {
       }
     },
 
-    async failBossFight() { // From MAIN
+    async failBossFight() {
+      // From MAIN
       this.gameMessage = `¡Fallaste! No lograste derrotar a ${this.currentBoss.name}. Vuelve a intentarlo al completar otra vuelta.`;
       // alert is jarring
-      await new Promise(r => setTimeout(r, this.getAnimationDelay(1500)));
+      await new Promise((r) => setTimeout(r, this.getAnimationDelay(1500)));
       this.gamePhase = "rolling"; // Player gets another chance after next lap
       this.isAnimating = false;
       this.playerLap--; // Effectively, they didn't complete the "boss lap"
