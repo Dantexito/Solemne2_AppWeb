@@ -167,7 +167,6 @@ function handleToggleSpeed() {
   margin-top: 5px;
   margin-bottom: 0; /* Removed bottom margin for tighter look */
 }
-/* --- End of New Styles --- */
 
 .game-info-content {
   padding: 15px;

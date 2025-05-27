@@ -27,8 +27,8 @@ const { boardSquares, boardRows, boardCols, playerPosition, gamePhase, currentBo
 // --- Static Player Image Configuration (from Lucas branch) ---
 // IMPORTANT: Update width and height to the actual dimensions of your knight_static.png
 const STATIC_PLAYER_IMAGE_DIMENSIONS = {
-  width: 40, // <<<< TODO: SET ACTUAL WIDTH OF knight_static.png
-  height: 40, // <<<< TODO: SET ACTUAL HEIGHT OF knight_static.png
+  width: 40,
+  height: 40,
 };
 // Assuming knight_static.png is in src/assets/sprites/
 const staticPlayerImageUrl = new URL("/assets/images/sprites/knight_static.png", import.meta.url)
