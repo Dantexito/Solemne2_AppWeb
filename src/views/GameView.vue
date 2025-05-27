@@ -6,7 +6,7 @@ import GameBoard from "../components/GameBoard.vue";
 import GameInfo from "../components/GameInfo.vue";
 import ReservedDiceDisplay from "../components/ReservedDiceDisplay.vue";
 import ChoiceModal from "../components/ChoiceModal.vue";
-// PlayerSprite import is no longer needed here if not used elsewhere in this component
+import SummaryModal from "@/components/SummaryModal.vue";
 
 const gameStore = useGameStore();
 const {
@@ -28,10 +28,9 @@ onMounted(() => {
 
 function handleRollNormalDice() {
   if (
-    gameStore.gamePhase === "rolling" &&
+    (gameStore.gamePhase === "rolling" || gameStore.gamePhase === "boss_encounter") &&
     !gameStore.isGameOver &&
-    gameStore.assetsLoaded &&
-    !gameStore.isAnimating
+    gameStore.assetsLoaded
   ) {
     gameStore.rollDice();
   }
@@ -84,7 +83,12 @@ function handleToggleSpeed() {
           <div class="normal-roll-button-container">
             <button
               @click="handleRollNormalDice"
-              :disabled="isGameOver || gamePhase !== 'rolling' || gameStore.isAnimating"
+              :disabled="
+                isGameOver ||
+                gameStore.isAnimating ||
+                (gamePhase !== 'rolling' &&
+                  (gamePhase !== 'boss_encounter' || gameStore.remainingBossRolls <= 0))
+              "
               class="roll-button"
             >
               Roll Normal Die
@@ -104,6 +108,7 @@ function handleToggleSpeed() {
       :details="choiceDetails"
       @player-choice="handleChoice"
     />
+    <SummaryModal v-if="gameStore.showSummaryModal" />
   </div>
 </template>
 

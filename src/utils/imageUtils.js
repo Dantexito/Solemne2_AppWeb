@@ -26,7 +26,7 @@ export function generateDieImageFilename(die, isFromLastRoll = false) {
 
   switch (type) {
     case DICE_TYPES.NORMAL:
-      return "die_d6.webp";
+      return "die_d6.png";
     case DICE_TYPES.FIXED:
       return `die_fixed_${value}.png`;
     case DICE_TYPES.D20:

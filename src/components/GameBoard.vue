@@ -27,11 +27,11 @@ const { boardSquares, boardRows, boardCols, playerPosition, gamePhase, currentBo
 // --- Static Player Image Configuration (from Lucas branch) ---
 // IMPORTANT: Update width and height to the actual dimensions of your knight_static.png
 const STATIC_PLAYER_IMAGE_DIMENSIONS = {
-  width: 40,  // <<<< TODO: SET ACTUAL WIDTH OF knight_static.png
+  width: 40, // <<<< TODO: SET ACTUAL WIDTH OF knight_static.png
   height: 40, // <<<< TODO: SET ACTUAL HEIGHT OF knight_static.png
 };
 // Assuming knight_static.png is in src/assets/sprites/
-const staticPlayerImageUrl = new URL('../assets/sprites/knight_static.png', import.meta.url).href;
+const staticPlayerImageUrl = new URL("../assets/sprites/knight_static.png", import.meta.url).href;
 // --- ---
 
 // Helper function to get the 1-indexed grid row and column for a square ID
@@ -45,16 +45,27 @@ function getSquareGridPosition(squareId, R_val, C_val) {
     if (C === 1) return { r: squareId + 1, c: 1 };
     return { r: 1, c: 1 };
   }
-  if (squareId >= 0 && squareId < R) { // Left Column
+  if (squareId >= 0 && squareId < R) {
+    // Left Column
     return { r: squareId + 1, c: 1 };
-  } else if (squareId >= R && squareId < R + C - 1) { // Bottom Row
+  } else if (squareId >= R && squareId < R + C - 1) {
+    // Bottom Row
     return { r: R, c: squareId - R + 2 };
-  } else if (squareId >= R + C - 1 && squareId < R + C - 1 + R - 1) { // Right Column
+  } else if (squareId >= R + C - 1 && squareId < R + C - 1 + R - 1) {
+    // Right Column
     return { r: R - 1 - (squareId - (R + C - 1)), c: C };
-  } else if (squareId >= R + C - 1 + R - 1 && squareId < gameStore.totalBoardSquares) { // Top Row
+  } else if (squareId >= R + C - 1 + R - 1 && squareId < gameStore.totalBoardSquares) {
+    // Top Row
     return { r: 1, c: C - 1 - (squareId - (R + C - 1 + R - 1)) };
   }
-  console.warn("GameBoard: Could not determine grid position for squareId:", squareId, "R:", R, "C:", C);
+  console.warn(
+    "GameBoard: Could not determine grid position for squareId:",
+    squareId,
+    "R:",
+    R,
+    "C:",
+    C
+  );
   return { r: 1, c: 1 };
 }
 
@@ -104,26 +115,26 @@ const staticPlayerMarkerStyle = computed(() => {
     left: `${leftPosition}px`,
     width: `${markerWidth}px`,
     height: `${markerHeight}px`,
-    zIndex: 10, 
-    pointerEvents: 'none',
+    zIndex: 10,
+    pointerEvents: "none",
   };
 });
 
 // Computed property for boss image URL (from main branch)
 const bossImageUrl = computed(() => {
-    if (currentBoss.value && currentBoss.value.image) {
-        // Assuming boss images are in public/assets/images/bosses/
-        // Vite serves from `public` directory at the root.
-        // If images are in `src/assets`, you'd use `new URL(...)`
-        return `/assets/images/bosses/${currentBoss.value.image}`;
-    }
-    return ''; // Or a placeholder boss image
+  if (currentBoss.value && currentBoss.value.image) {
+    // Assuming boss images are in public/assets/images/bosses/
+    // Vite serves from `public` directory at the root.
+    // If images are in `src/assets`, you'd use `new URL(...)`
+    return `/assets/images/bosses/${currentBoss.value.image}`;
+  }
+  return ""; // Or a placeholder boss image
 });
-
 </script>
 
 <template>
-  <div class="game-board-wrapper"> <div class="game-board-perimeter">
+  <div class="game-board-wrapper">
+    <div class="game-board-perimeter">
       <BoardSquare
         v-for="square in boardSquares"
         :key="square.id"
@@ -138,14 +149,26 @@ const bossImageUrl = computed(() => {
         :style="staticPlayerMarkerStyle"
       />
     </div>
-    <div v-if="gamePhase === 'boss_encounter' && currentBoss" class="boss-overlay">
-      <img
-        v-if="bossImageUrl"
-        :src="bossImageUrl"
-        class="boss-image"
-        alt="Boss"
-      />
-      <p v-else class="boss-name-fallback">{{ currentBoss.name || 'A Fearsome Boss' }}</p>
+    <div v-if="gameStore.gamePhase === 'boss_encounter'" class="boss-overlay-inside-board">
+      <div class="boss-wrapper animated-boss">
+        <img
+          :src="`/assets/images/bosses/${gameStore.currentBoss?.image}`"
+          class="boss-image-inside"
+          alt="Boss"
+        />
+
+        <!-- 🎲 Número del dado lanzado -->
+        <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
+          🎲 {{ gameStore.bossLastRoll }}
+        </div>
+        <div class="boss-counters">
+          <p><strong>🎲 Dados restantes:</strong> {{ gameStore.remainingBossRolls }}</p>
+          <p>
+            <strong>💥 Total acumulado:</strong>
+            {{ gameStore.currentDiceThrows.reduce((a, b) => a + b, 0) }}
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -178,33 +201,78 @@ const bossImageUrl = computed(() => {
   /* zIndex and positioning are handled by inline style */
 }
 
-.boss-overlay {
+.boss-overlay-inside-board {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.65); /* Semi-transparent dark overlay */
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.boss-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  z-index: 20; /* Ensure boss is on top of player and board */
-  border-radius: calc(3px + var(--board-cols, 6) * 0.5px); /* Match board border somewhat */
+  gap: 15px;
+  filter: drop-shadow(0 0 15px white);
 }
 
-.boss-image {
-  max-width: 80%;
-  max-height: 80%;
+.boss-image-inside {
+  max-width: 60%;
+  max-height: 70%;
   object-fit: contain;
-  border: 3px solid gold;
-  border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.1);
+  pointer-events: none;
 }
-.boss-name-fallback {
-    color: white;
-    font-size: 1.5em;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px black;
+
+.boss-counters {
+  color: white;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+@keyframes bossEntrance {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animated-boss {
+  animation: bossEntrance 0.6s ease-out;
+}
+.boss-die-result {
+  font-size: 4rem;
+  font-weight: bold;
+  color: white;
+  margin-top: 10px;
+  animation: pop-in 0.8s ease-out;
+  text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>

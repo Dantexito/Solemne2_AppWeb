@@ -8,7 +8,13 @@ const gameStore = useGameStore();
 const { reservedDice, gamePhase, isGameOver, diceBagCapacityDisplay } = storeToRefs(gameStore);
 
 function useReservedDie(index) {
-  if (gameStore.gamePhase === "rolling" && !gameStore.isGameOver) {
+  const die = gameStore.reservedDice[index];
+
+  if (gameStore.isGameOver || !die) return;
+
+  if (gameStore.gamePhase === "boss_encounter") {
+    gameStore.rollDiceForBoss(die);
+  } else if (gameStore.gamePhase === "rolling") {
     gameStore.rollDice(index);
   }
 }
@@ -21,8 +27,10 @@ function useReservedDie(index) {
     <div class="dice-grid">
       <SingleDieDisplay
         v-for="(die, index) in reservedDice"
-        :key="index"
+        :key="`${die.type}-${die.value ?? 0}-${index}`"
         :die="die"
+        @mouseenter="gameStore.highlightSquareForDie(die)"
+        @mouseleave="gameStore.clearHighlightedSquare"
         @use-die="useReservedDie(index)"
       />
     </div>
