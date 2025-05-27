@@ -38,7 +38,7 @@ const STAGE_CONFIGS = {
     bossImage: "greedy_goblin_king.webp",
     bossDefeatCondition: {
       diceThrows: 3,
-      targetSum: 20,
+      targetSum: 30,
     },
   },
   3: {
@@ -56,8 +56,8 @@ const STAGE_CONFIGS = {
     bossName: "Comandante Goblin",
     bossImage: "goblin_general.jpeg",
     bossDefeatCondition: {
-      diceThrows: 4,
-      targetSum: 30,
+      diceThrows: 3,
+      targetSum: 40,
     },
   },
   4: {
@@ -75,8 +75,8 @@ const STAGE_CONFIGS = {
     bossName: "Dragón Tesorero",
     bossImage: "dragon_treasurer.png",
     bossDefeatCondition: {
-      diceThrows: 4,
-      targetSum: 35,
+      diceThrows: 3,
+      targetSum: 50,
     },
   },
   5: {
@@ -94,8 +94,8 @@ const STAGE_CONFIGS = {
     bossName: "Gato Dios Oscuro",
     bossImage: "dark_godcat.webp",
     bossDefeatCondition: {
-      diceThrows: 5,
-      targetSum: 50,
+      diceThrows: 3,
+      targetSum: 70,
     },
   },
 };
