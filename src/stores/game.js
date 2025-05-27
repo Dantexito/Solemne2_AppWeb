@@ -88,11 +88,11 @@ const MAX_STAGES = Object.keys(STAGE_CONFIGS).length;
 const HUGE_MONEY_AMOUNT_BASE = 10;
 
 export const DICE_TYPES = {
-  NORMAL: "normal",
-  FIXED: "fixed",
-  D20: "d20",
-  REVERSE_FIXED: "reverse_fixed",
-  REVERSE_RANDOM: "reverse_random",
+  NORMAL: "Random",
+  FIXED: "Fixed",
+  D20: "20",
+  REVERSE_FIXED: "Reverse Fixed",
+  REVERSE_RANDOM: "Reverse Random",
 };
 
 // --- Helper Functions ---
@@ -149,9 +149,6 @@ export const useGameStore = defineStore("game", {
   }),
 
   getters: {
-    currentStageConfig(state) {
-      return STAGE_CONFIGS[state.playerStage] || STAGE_CONFIGS[1];
-    },
     totalBoardSquares(state) {
       const config = this.currentStageConfig;
       if (!config || !config.rows || !config.cols) return 0;
@@ -486,16 +483,6 @@ export const useGameStore = defineStore("game", {
         if (direction > 0) {
           this.playerPosition = (this.playerPosition + 1) % this.totalBoardSquares;
 
-          const currentSq = this.boardSquares[this.playerPosition];
-          if (
-            currentSq &&
-            currentSq.currentEffectType === "normal_money" &&
-            currentSq.effectDetails?.amount
-          ) {
-            const amount = currentSq.effectDetails.amount;
-            this.playerMoney += amount;
-            moneyEarnedThisTurn += amount;
-          }
           if (this.playerPosition === 0) {
             passedStartThisTurn = true;
             this.playerLap++;
@@ -509,13 +496,25 @@ export const useGameStore = defineStore("game", {
               this.gamePhase = "boss_encounter";
               this.isAnimating = false;
               await this.handleBossEncounter();
-              return; // detener inmediatamente
+              return;
             } else {
               this.setupLapEffects();
               await new Promise((resolve) => setTimeout(resolve, this.getAnimationDelay(500)));
             }
 
-            break; // Detiene movimiento inmediatamente al dar la vuelta.
+            break; // Detener movimiento justo al pisar la casilla 0
+          }
+
+          // Si no es la casilla 0, evalúa efectos normales
+          const currentSq = this.boardSquares[this.playerPosition];
+          if (
+            currentSq &&
+            currentSq.currentEffectType === "normal_money" &&
+            currentSq.effectDetails?.amount
+          ) {
+            const amount = currentSq.effectDetails.amount;
+            this.playerMoney += amount;
+            moneyEarnedThisTurn += amount;
           }
         } else {
           this.playerPosition =
@@ -963,7 +962,13 @@ export const useGameStore = defineStore("game", {
       this.currentDiceThrows = [];
       this.remainingBossRolls = 0;
       this.gamePhase = "rolling";
-      this.currentStageConfig = STAGE_CONFIGS[this.playerStage];
+      const nextStageConfig = STAGE_CONFIGS[this.playerStage];
+      if (!nextStageConfig) {
+        console.error("No config found for stage", this.playerStage);
+        return;
+      }
+      this.currentStageConfig = JSON.parse(JSON.stringify(nextStageConfig));
+      this.setupStage(); // ← ESTA LÍNEA ESCLAVEMENTE NECESARIA
     },
 
     async failBossFight() {
