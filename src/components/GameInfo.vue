@@ -18,7 +18,7 @@ const {
 <template>
   <div class="game-stats-panel">
     <h3>
-      Stage: {{ playerStage }} | Lap: {{ playerLap }} /
+      Etapa: {{ playerStage }} | Vuelta: {{ playerLap }} /
       {{ currentStageConfig?.lapsToComplete || 3 }}
     </h3>
     <p>⬇️Posición: {{ playerPosition }}</p>
@@ -26,11 +26,11 @@ const {
     <hr />
     <div class="debug-info">
       <p v-if="lastDiceRoll">
-        Last Roll: {{ lastDiceRoll.value }} ({{ lastDiceRoll.type }} die,
+        Última tirada: {{ lastDiceRoll.value }} ({{ lastDiceRoll.type }} die,
         {{ lastDiceRoll.direction }})
       </p>
       <p class="game-feedback" v-if="gameMessage">{{ gameMessage }}</p>
-      <p v-if="!lastDiceRoll && !gameMessage">Roll the die!</p>
+      <p v-if="!lastDiceRoll && !gameMessage">Tira el dado!</p>
     </div>
   </div>
 </template>
