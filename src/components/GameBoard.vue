@@ -134,15 +134,14 @@ const bossImageUrl = computed(() => {
 <template>
   <div class="game-board-wrapper">
     <div
-  class="game-board-perimeter"
-  :style="{
-    gridTemplateColumns: `repeat(${boardCols}, 60px)`,
-    gridTemplateRows: `repeat(${boardRows}, 60px)`,
-    width: `${boardCols * 60}px`,
-    height: `${boardRows * 60}px`
-  }"
->
-
+      class="game-board-perimeter"
+      :style="{
+        gridTemplateColumns: `repeat(${boardCols}, 60px)`,
+        gridTemplateRows: `repeat(${boardRows}, 60px)`,
+        width: `${boardCols * 60}px`,
+        height: `${boardRows * 60}px`,
+      }"
+    >
       <BoardSquare
         v-for="square in boardSquares"
         :key="square.id"
@@ -157,35 +156,32 @@ const bossImageUrl = computed(() => {
         :style="staticPlayerMarkerStyle"
       />
     </div>
-    
+
+          <div v-if="gameStore.showGeneralRollAnimation" class="general-die-result">
+        🎲 {{ gameStore.lastGeneralRoll }}
+      </div>
 
     <div v-if="gameStore.gamePhase === 'boss_encounter'" class="boss-overlay-inside-board">
-  <div class="boss-wrapper animated-boss">
-    <h2 class="boss-name">{{ gameStore.currentBoss?.name }}</h2>
-    <img
-      v-if="bossImageUrl"
-      :src="bossImageUrl"
-      alt="Boss"
-      class="boss-image"
-    />
+      <div class="boss-wrapper animated-boss">
+        <h2 class="boss-name">{{ gameStore.currentBoss?.name }}</h2>
+        <img v-if="bossImageUrl" :src="bossImageUrl" alt="Boss" class="boss-image" />
 
-    <p class="boss-hp-text">
-      ❤️ Vida del jefe: {{ gameStore.currentBossHP }} / {{ gameStore.currentBossMaxHP }}
-    </p>
+        <p class="boss-hp-text">
+          ❤️ Vida del jefe: {{ gameStore.currentBossHP }} / {{ gameStore.currentBossMaxHP }}
+        </p>
 
-    <button class="pay-boss-button" @click="gameStore.payToDefeatBoss">
-      💰 Pagar {{ gameStore.currentBoss?.bribeCost || "??" }} monedas para derrotar al jefe
-    </button>
+        <button class="pay-boss-button" @click="gameStore.payToDefeatBoss">
+          💰 Pagar {{ gameStore.currentBoss?.bribeCost || "??" }} monedas para derrotar al jefe
+        </button>
 
-    <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
-      🎲 {{ gameStore.bossLastRoll }}
+        <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
+          🎲 {{ gameStore.bossLastRoll }}
+        </div>
+        <div class="boss-counters">
+          <p><strong>🎲 Dados restantes:</strong> {{ gameStore.remainingBossRolls }}</p>
+        </div>
+      </div>
     </div>
-    <div class="boss-counters">
-      <p><strong>🎲 Dados restantes:</strong> {{ gameStore.remainingBossRolls }}</p>
-    </div>
-  </div>
-</div>
-
   </div>
 </template>
 
@@ -249,7 +245,6 @@ const bossImageUrl = computed(() => {
   text-align: center;
   margin-top: 7px; /* 👈 Añade esto */
 }
-
 
 @keyframes bossEntrance {
   0% {
@@ -338,7 +333,21 @@ const bossImageUrl = computed(() => {
   text-align: center;
   word-wrap: break-word;
 }
+.general-die-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
+  font-size: 4rem;
+  font-weight: bold;
+  color: white;
+  animation: pop-in 0.8s ease-out;
+  text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+  z-index: 30;
+  pointer-events: none;
+}
 
 
 </style>

@@ -151,6 +151,8 @@ export const useGameStore = defineStore("game", {
     lastPlayerPositionBeforeThisMove: 0,
     assetsLoaded: false,
     highlightedTargetSquare: null,
+    lastGeneralRoll: null, // Last general roll for visual effects
+    showGeneralRoll: false, // Flag to show/hide last general roll visual
 
     // Boss-related state
     currentBoss: null,
@@ -471,6 +473,8 @@ export const useGameStore = defineStore("game", {
         default:
           steps = getRandomInt(1, 6);
       }
+      this.showDieRoll(Math.abs(steps));
+
       let effectiveTypeForImage = originalTypeForLastRoll;
       if (steps < 0) {
         if (originalTypeForLastRoll === DICE_TYPES.NORMAL)
@@ -487,6 +491,15 @@ export const useGameStore = defineStore("game", {
       console.log(`Rolled ${steps} with original type ${originalTypeForLastRoll}`);
       await this.movePlayer(steps);
     },
+
+    showDieRoll(number) {
+  this.lastGeneralRoll = number;
+  this.showGeneralRollAnimation = true;
+  setTimeout(() => {
+    this.showGeneralRollAnimation = false;
+  }, 1000); // dura lo mismo que `pop-in`
+},
+
 
     async movePlayer(steps) {
       this.gamePhase = "player_moving_animation"; // Player is now "walking"
