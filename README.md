@@ -40,4 +40,4 @@ pnpm build
 pnpm lint
 ```
 
-alol
+alol so
