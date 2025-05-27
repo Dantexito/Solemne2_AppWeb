@@ -134,7 +134,16 @@ const bossImageUrl = computed(() => {
 
 <template>
   <div class="game-board-wrapper">
-    <div class="game-board-perimeter">
+    <div
+  class="game-board-perimeter"
+  :style="{
+    gridTemplateColumns: `repeat(${boardCols}, 60px)`,
+    gridTemplateRows: `repeat(${boardRows}, 60px)`,
+    width: `${boardCols * 60}px`,
+    height: `${boardRows * 60}px`
+  }"
+>
+
       <BoardSquare
         v-for="square in boardSquares"
         :key="square.id"
@@ -188,11 +197,6 @@ const bossImageUrl = computed(() => {
   border: 3px solid saddlebrown;
   position: relative; /* For static player marker positioning */
   background-color: #f0e0c0;
-}
-
-.game-board-perimeter {
-  --board-rows: v-bind("gameStore.boardRows");
-  --board-cols: v-bind("gameStore.boardCols");
 }
 
 .static-player-marker {
