@@ -133,19 +133,17 @@ export const useGameStore = defineStore("game", {
     assetsLoaded: false,
     highlightedTargetSquare: null,
 
-
     // Boss-related state
     currentBoss: null,
     currentDiceThrows: [],
     remainingBossRolls: 0,
     bossLastRoll: null,
 
-
     // Game summary state
-    totalRolls: 0,            // Cuenta cuántos dados ha lanzado el jugador en total
-    diceObtained: 0,          // Cuenta cuántos dados ha ganado el jugador
-    bossesDefeated: 0,        // Número total de jefes derrotados
-    showSummaryModal: false,  // Para mostrar el resumen visual al final del juego
+    totalRolls: 0, // Cuenta cuántos dados ha lanzado el jugador en total
+    diceObtained: 0, // Cuenta cuántos dados ha ganado el jugador
+    bossesDefeated: 0, // Número total de jefes derrotados
+    showSummaryModal: false, // Para mostrar el resumen visual al final del juego
     currentStageConfig: STAGE_CONFIGS[1], // Configuración del stage actual
   }),
 
@@ -364,51 +362,53 @@ export const useGameStore = defineStore("game", {
     addReservedDie(dieData) {
       console.log("🧩 addReservedDie called with:", dieData);
       if (!dieData) return;
-    
+
       const signature = JSON.stringify(dieData);
-    
+
       if (this.reservedDice.length < this.maxDiceInBag) {
         this.reservedDice.push(dieData);
         this.diceObtained++;
-        this.gameMessage = `🎁 Obtuviste un dado: ${dieData.type}${dieData.value ? " (" + dieData.value + ")" : ""}`;
-        console.log(`addReservedDie: Añadido ${signature}. Bolsa actual: ${this.reservedDice.length}`);
+        this.gameMessage = `🎁 Obtuviste un dado: ${dieData.type}${
+          dieData.value ? " (" + dieData.value + ")" : ""
+        }`;
+        console.log(
+          `addReservedDie: Añadido ${signature}. Bolsa actual: ${this.reservedDice.length}`
+        );
       } else {
         this.gameMessage = `🎒 Bolsa de dados llena (${this.maxDiceInBag})! No se añadió ${dieData.type}.`;
         console.warn("addReservedDie: Bolsa llena. Dado ignorado.");
       }
-    }
-    ,
-
+    },
     async rollDice(reservedDieIndex = -1) {
       if (this.gamePhase === "boss_encounter") {
         if (this.remainingBossRolls <= 0) return;
-      
+
         const roll = Math.ceil(Math.random() * 6);
         this.bossLastRoll = roll;
         setTimeout(() => {
           this.bossLastRoll = null;
         }, 1000);
-      
+
         this.currentDiceThrows.push(roll);
         this.remainingBossRolls--;
         this.totalRolls++;
         this.gameMessage = `Lanzaste un ${roll}. Quedan ${this.remainingBossRolls} intento(s).`;
-      
+
         const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
-      
+
         // ✅ Derrotar inmediatamente si se alcanza la suma
         if (total >= this.currentBoss.targetSum) {
           await this.defeatBoss();
           return;
         }
-      
+
         // Solo fallar si no alcanzaste y se acabaron los intentos
         if (this.remainingBossRolls === 0) {
           await this.failBossFight();
         }
-      
+
         return;
-      }      
+      }
       if (this.isGameOver || this.gamePhase !== "rolling" || this.isAnimating) {
         console.warn("RollDice: Aborted - Conditions not met or already animating.", {
           phase: this.gamePhase,
@@ -591,27 +591,25 @@ export const useGameStore = defineStore("game", {
         this.highlightedTargetSquare = null;
         return;
       }
-    
+
       const nonPredictableTypes = ["normal", "d20", "reverse_random"];
       const type = die.type?.toLowerCase?.();
-    
+
       if (!die.value || nonPredictableTypes.includes(type)) {
         this.highlightedTargetSquare = null;
         return;
       }
-    
+
       const steps = type.includes("reverse") ? -die.value : die.value;
       const total = this.boardSquares.length;
       const target = (this.playerPosition + steps + total) % total;
-    
+
       this.highlightedTargetSquare = target;
-    },    
+    },
 
     clearHighlightedSquare() {
       this.highlightedTargetSquare = null;
     },
-    
-    
 
     resetGame() {
       this.playerMoney = 0;
@@ -629,8 +627,7 @@ export const useGameStore = defineStore("game", {
       this.isGameOver = false;
       this.showSummaryModal = false;
       this.currentStageConfig = STAGE_CONFIGS[1];
-    },    
-
+    },
 
     handleSquareLanding() {
       if (this.isGameOver || (this.isAnimating && this.gamePhase !== "landed")) {
@@ -853,9 +850,7 @@ export const useGameStore = defineStore("game", {
         message: `Choose a die (${finalDiceOptions.length} options):`,
         options: finalDiceOptions,
       };
-      console.log(
-        "Store: handleSquareLanding - Set gamePhase to awaiting_choice for pick_a_die."
-      );
+      console.log("Store: handleSquareLanding - Set gamePhase to awaiting_choice for pick_a_die.");
       return " " + this.choiceDetails.message;
     },
 
@@ -869,9 +864,9 @@ export const useGameStore = defineStore("game", {
           this.playerMoney += chosenOption.value;
           this.gameMessage = `Chose money! +$${chosenOption.value}.`;
           break;
-          case "get_chosen_die":
-            this.addReservedDie(chosenOption.value);
-            break;
+        case "get_chosen_die":
+          this.addReservedDie(chosenOption.value);
+          break;
       }
       if (oSI >= 0 && oSI < this.boardSquares.length) {
         this.boardSquares[oSI].currentEffectType = "none";
@@ -898,38 +893,39 @@ export const useGameStore = defineStore("game", {
 
     async rollDiceForBoss(die) {
       if (this.gamePhase !== "boss_encounter") return;
-    
+
       // 🔻 Elimina el dado de la reserva
       const dieIndex = this.reservedDice.indexOf(die);
       if (dieIndex !== -1) {
         this.reservedDice.splice(dieIndex, 1);
       }
-    
+
       const roll = die.value || Math.ceil(Math.random() * 6);
       this.bossLastRoll = roll;
       setTimeout(() => {
         this.bossLastRoll = null;
       }, 1000);
-    
+
       this.currentDiceThrows.push(roll);
       this.totalRolls++;
       this.gameMessage = `Usaste un dado reservado y lanzaste un ${roll}.`;
-    
+
       const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
-    
+
       // ✅ Si ya alcanza el total, no esperar más
       if (total >= this.currentBoss.targetSum) {
         await this.defeatBoss();
         return;
       }
-    
+
       // Solo falla si se usaron todos los dados normales y aún no alcanza
       if (this.remainingBossRolls === 0) {
         await this.failBossFight();
       }
     },
 
-    async rollCustomDie(die) { // From MAIN
+    async rollCustomDie(die) {
+      // From MAIN
       // This function should return the numerical result of the roll
       let result;
       switch (die.type) {
@@ -941,7 +937,7 @@ export const useGameStore = defineStore("game", {
           // Or if it means "bad" roll: result = -(getRandomInt(1,6));
           break;
         case DICE_TYPES.D20:
-          result = getRandomInt(1,20);
+          result = getRandomInt(1, 20);
           break;
         // Add other dice types from your DICE_TYPES if they have specific roll mechanics
         default: // Includes DICE_TYPES.NORMAL
@@ -954,13 +950,13 @@ export const useGameStore = defineStore("game", {
       this.bossesDefeated++;
       this.gameMessage = "¡Has derrotado al jefe!";
       await new Promise((res) => setTimeout(res, 500));
-    
+
       if (this.playerStage >= Object.keys(STAGE_CONFIGS).length) {
         this.isGameOver = true;
         this.showSummaryModal = true;
         return;
       }
-    
+
       this.playerStage++;
       this.playerLap = 0;
       this.currentDiceThrows = [];

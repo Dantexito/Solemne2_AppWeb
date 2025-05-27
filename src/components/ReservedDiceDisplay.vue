@@ -18,7 +18,6 @@ function useReservedDie(index) {
     gameStore.rollDice(index);
   }
 }
-
 </script>
 
 <template>

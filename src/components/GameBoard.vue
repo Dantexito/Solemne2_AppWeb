@@ -27,11 +27,11 @@ const { boardSquares, boardRows, boardCols, playerPosition, gamePhase, currentBo
 // --- Static Player Image Configuration (from Lucas branch) ---
 // IMPORTANT: Update width and height to the actual dimensions of your knight_static.png
 const STATIC_PLAYER_IMAGE_DIMENSIONS = {
-  width: 40,  // <<<< TODO: SET ACTUAL WIDTH OF knight_static.png
+  width: 40, // <<<< TODO: SET ACTUAL WIDTH OF knight_static.png
   height: 40, // <<<< TODO: SET ACTUAL HEIGHT OF knight_static.png
 };
 // Assuming knight_static.png is in src/assets/sprites/
-const staticPlayerImageUrl = new URL('../assets/sprites/knight_static.png', import.meta.url).href;
+const staticPlayerImageUrl = new URL("../assets/sprites/knight_static.png", import.meta.url).href;
 // --- ---
 
 // Helper function to get the 1-indexed grid row and column for a square ID
@@ -45,16 +45,27 @@ function getSquareGridPosition(squareId, R_val, C_val) {
     if (C === 1) return { r: squareId + 1, c: 1 };
     return { r: 1, c: 1 };
   }
-  if (squareId >= 0 && squareId < R) { // Left Column
+  if (squareId >= 0 && squareId < R) {
+    // Left Column
     return { r: squareId + 1, c: 1 };
-  } else if (squareId >= R && squareId < R + C - 1) { // Bottom Row
+  } else if (squareId >= R && squareId < R + C - 1) {
+    // Bottom Row
     return { r: R, c: squareId - R + 2 };
-  } else if (squareId >= R + C - 1 && squareId < R + C - 1 + R - 1) { // Right Column
+  } else if (squareId >= R + C - 1 && squareId < R + C - 1 + R - 1) {
+    // Right Column
     return { r: R - 1 - (squareId - (R + C - 1)), c: C };
-  } else if (squareId >= R + C - 1 + R - 1 && squareId < gameStore.totalBoardSquares) { // Top Row
+  } else if (squareId >= R + C - 1 + R - 1 && squareId < gameStore.totalBoardSquares) {
+    // Top Row
     return { r: 1, c: C - 1 - (squareId - (R + C - 1 + R - 1)) };
   }
-  console.warn("GameBoard: Could not determine grid position for squareId:", squareId, "R:", R, "C:", C);
+  console.warn(
+    "GameBoard: Could not determine grid position for squareId:",
+    squareId,
+    "R:",
+    R,
+    "C:",
+    C
+  );
   return { r: 1, c: 1 };
 }
 
@@ -104,26 +115,26 @@ const staticPlayerMarkerStyle = computed(() => {
     left: `${leftPosition}px`,
     width: `${markerWidth}px`,
     height: `${markerHeight}px`,
-    zIndex: 10, 
-    pointerEvents: 'none',
+    zIndex: 10,
+    pointerEvents: "none",
   };
 });
 
 // Computed property for boss image URL (from main branch)
 const bossImageUrl = computed(() => {
-    if (currentBoss.value && currentBoss.value.image) {
-        // Assuming boss images are in public/assets/images/bosses/
-        // Vite serves from `public` directory at the root.
-        // If images are in `src/assets`, you'd use `new URL(...)`
-        return `/assets/images/bosses/${currentBoss.value.image}`;
-    }
-    return ''; // Or a placeholder boss image
+  if (currentBoss.value && currentBoss.value.image) {
+    // Assuming boss images are in public/assets/images/bosses/
+    // Vite serves from `public` directory at the root.
+    // If images are in `src/assets`, you'd use `new URL(...)`
+    return `/assets/images/bosses/${currentBoss.value.image}`;
+  }
+  return ""; // Or a placeholder boss image
 });
-
 </script>
 
 <template>
-  <div class="game-board-wrapper"> <div class="game-board-perimeter">
+  <div class="game-board-wrapper">
+    <div class="game-board-perimeter">
       <BoardSquare
         v-for="square in boardSquares"
         :key="square.id"
@@ -138,28 +149,27 @@ const bossImageUrl = computed(() => {
         :style="staticPlayerMarkerStyle"
       />
     </div>
-    <div
-  v-if="gameStore.gamePhase === 'boss_encounter'"
-  class="boss-overlay-inside-board"
->
-  <div class="boss-wrapper animated-boss">
-    <img
-      :src="`/assets/images/bosses/${gameStore.currentBoss?.image}`"
-      class="boss-image-inside"
-      alt="Boss"
-    />
+    <div v-if="gameStore.gamePhase === 'boss_encounter'" class="boss-overlay-inside-board">
+      <div class="boss-wrapper animated-boss">
+        <img
+          :src="`/assets/images/bosses/${gameStore.currentBoss?.image}`"
+          class="boss-image-inside"
+          alt="Boss"
+        />
 
-    <!-- 🎲 Número del dado lanzado -->
-    <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
-      🎲 {{ gameStore.bossLastRoll }}
+        <!-- 🎲 Número del dado lanzado -->
+        <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
+          🎲 {{ gameStore.bossLastRoll }}
+        </div>
+        <div class="boss-counters">
+          <p><strong>🎲 Dados restantes:</strong> {{ gameStore.remainingBossRolls }}</p>
+          <p>
+            <strong>💥 Total acumulado:</strong>
+            {{ gameStore.currentDiceThrows.reduce((a, b) => a + b, 0) }}
+          </p>
+        </div>
+      </div>
     </div>
-    <div class="boss-counters">
-      <p><strong>🎲 Dados restantes:</strong> {{ gameStore.remainingBossRolls }}</p>
-      <p><strong>💥 Total acumulado:</strong> {{ gameStore.currentDiceThrows.reduce((a, b) => a + b, 0) }}</p>
-    </div>
-  </div>
-</div>
-
   </div>
 </template>
 
@@ -265,5 +275,4 @@ const bossImageUrl = computed(() => {
     opacity: 1;
   }
 }
-
 </style>

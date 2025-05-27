@@ -9,7 +9,6 @@ import ReservedDiceDisplay from "../components/ReservedDiceDisplay.vue";
 import ChoiceModal from "../components/ChoiceModal.vue";
 import SummaryModal from "@/components/SummaryModal.vue";
 
-
 const gameStore = useGameStore();
 const { isGameOver, gamePhase, choiceDetails, boardRows, boardCols } = storeToRefs(gameStore);
 
@@ -26,7 +25,6 @@ function handleRollNormalDice() {
     gameStore.rollDice();
   }
 }
-
 
 function handleChoice(option) {
   gameStore.playerMakesChoice(option);
@@ -66,7 +64,12 @@ function handleToggleSpeed() {
           <div class="normal-roll-button-container">
             <button
               @click="handleRollNormalDice"
-              :disabled="isGameOver || gameStore.isAnimating || (gamePhase !== 'rolling' && (gamePhase !== 'boss_encounter' || gameStore.remainingBossRolls <= 0))"
+              :disabled="
+                isGameOver ||
+                gameStore.isAnimating ||
+                (gamePhase !== 'rolling' &&
+                  (gamePhase !== 'boss_encounter' || gameStore.remainingBossRolls <= 0))
+              "
               class="roll-button"
             >
               Roll Normal Die

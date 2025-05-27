@@ -100,11 +100,9 @@ const squareClasses = computed(() => ({
     :class="[
       square.baseType,
       square.currentEffectType,
-      { highlighted: isHighlighted, active: isPlayerCurrentlyOnThisSquare }
+      { highlighted: isHighlighted, active: isPlayerCurrentlyOnThisSquare },
     ]"
   >
-
-
     <div class="square-id-container">
       <span class="square-id">{{ square.id }}</span>
     </div>
@@ -248,5 +246,4 @@ const squareClasses = computed(() => ({
 .board-square.active {
   border: 2px solid yellow;
 }
-
 </style>
