@@ -32,7 +32,7 @@ export function generateDieImageFilename(die, isFromLastRoll = false) {
     case DICE_TYPES.D20:
       return "die_d20.png";
     case DICE_TYPES.REVERSE_FIXED:
-      return `die_fixed_${value}_reverse.png`;
+      return `die_fixed_reverse_${value}.png`;
     case DICE_TYPES.REVERSE_RANDOM:
       return "die_d6_reverse.png";
     default:

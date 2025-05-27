@@ -263,7 +263,7 @@ const bossImageUrl = computed(() => {
 .boss-die-result {
   font-size: 4rem;
   font-weight: bold;
-  color: white;
+  color: rgb(190, 68, 68);
   margin-top: 10px;
   animation: pop-in 0.8s ease-out;
   text-shadow: 0 0 10px #fff, 0 0 20px #fff;
@@ -344,7 +344,7 @@ const bossImageUrl = computed(() => {
   font-weight: bold;
   color: white;
   animation: pop-in 0.8s ease-out;
-  text-shadow: 0 0 10px #fff, 0 0 20px #fff;
+  text-shadow: 0 0 5px #fff, 0 0 5px #fff;
   z-index: 30;
   pointer-events: none;
 }
