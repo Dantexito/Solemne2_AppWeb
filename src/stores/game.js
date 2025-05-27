@@ -36,6 +36,10 @@ const STAGE_CONFIGS = {
     maxChoicePickDieSquares: 8,
     bossName: "Goblin Codicioso",
     bossImage: "greedy_goblin_king.webp",
+    bossDefeatCondition: {
+      diceThrows: 3,
+      targetSum: 20,
+    },
   },
   3: {
     // 9x9 - example
@@ -51,6 +55,10 @@ const STAGE_CONFIGS = {
     maxChoicePickDieSquares: 8,
     bossName: "Comandante Goblin",
     bossImage: "goblin_general.jpeg",
+    bossDefeatCondition: {
+      diceThrows: 4,
+      targetSum: 30,
+    },
   },
   4: {
     // 12x12 - example
@@ -66,6 +74,10 @@ const STAGE_CONFIGS = {
     maxChoicePickDieSquares: 16,
     bossName: "Dragón Tesorero",
     bossImage: "dragon_treasurer.png",
+    bossDefeatCondition: {
+      diceThrows: 4,
+      targetSum: 35,
+    },
   },
   5: {
     // 12x12
@@ -81,9 +93,14 @@ const STAGE_CONFIGS = {
     maxChoicePickDieSquares: 16,
     bossName: "Gato Dios Oscuro",
     bossImage: "dark_godcat.webp",
+    bossDefeatCondition: {
+      diceThrows: 5,
+      targetSum: 50,
+    },
   },
 };
-const MAX_RESERVED_DICE = 10;
+
+const MAX_RESERVED_DICE = 15;
 const MAX_STAGES = Object.keys(STAGE_CONFIGS).length;
 const HUGE_MONEY_AMOUNT_BASE = 10;
 
