@@ -31,9 +31,8 @@ const STATIC_PLAYER_IMAGE_DIMENSIONS = {
   height: 40, // <<<< TODO: SET ACTUAL HEIGHT OF knight_static.png
 };
 // Assuming knight_static.png is in src/assets/sprites/
-const staticPlayerImageUrl = new URL("../assets/sprites/knight_static.png", import.meta.url).href;
-// --- ---
-
+const staticPlayerImageUrl = new URL("/assets/images/sprites/knight_static.png", import.meta.url)
+  .href;
 // Helper function to get the 1-indexed grid row and column for a square ID
 // Path: Down -> Right -> Up -> Left (starting top-left at 0)
 // This function is crucial for both BoardSquare and staticPlayerMarker positioning
