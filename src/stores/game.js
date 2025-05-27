@@ -42,7 +42,7 @@ const STAGE_CONFIGS = {
     },
   },
   3: {
-    // 9x9 - example
+    // 9x9
     rows: 9,
     cols: 9,
     moneyMultiplier: 1.75,
@@ -61,7 +61,7 @@ const STAGE_CONFIGS = {
     },
   },
   4: {
-    // 12x12 - example
+    // 12x12
     rows: 12,
     cols: 12,
     moneyMultiplier: 2,
