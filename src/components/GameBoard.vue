@@ -287,7 +287,7 @@ const bossImageUrl = computed(() => {
   max-height: 60vh;
   width: auto;
   height: auto;
-  max-width: 90%;
+  max-width: 60%;
   display: block;
   margin: 0 auto;
 }
