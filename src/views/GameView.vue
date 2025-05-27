@@ -9,18 +9,13 @@ import ChoiceModal from "../components/ChoiceModal.vue";
 import SummaryModal from "@/components/SummaryModal.vue";
 
 const gameStore = useGameStore();
-const {
-  isGameOver,
-  gamePhase,
-  choiceDetails,
-  animationSpeedMultiplier,
-  // playerActionState is no longer needed for a static display here
-} = storeToRefs(gameStore);
+const { isGameOver, gamePhase, choiceDetails, animationSpeedMultiplier } = storeToRefs(gameStore);
 
 // URL for the static player image in the display panel
-// Assuming knight_static.png is in src/assets/sprites/
-const staticPlayerDisplayImageUrl = new URL("/assets/sprites/knight_static.png", import.meta.url)
-  .href;
+const staticPlayerDisplayImageUrl = new URL(
+  "/assets/images/sprites/knight_static.png",
+  import.meta.url
+).href;
 
 onMounted(() => {
   gameStore.initializeGame();
