@@ -25,15 +25,14 @@ const { boardSquares, boardRows, boardCols, playerPosition, gamePhase, currentBo
   storeToRefs(gameStore);
 
 // --- Static Player Image Configuration (from Lucas branch) ---
-// IMPORTANT: Update width and height to the actual dimensions of your knight_static.png
+// Update width and height to the actual dimensions of your knight_static.png
 const STATIC_PLAYER_IMAGE_DIMENSIONS = {
-  width: 40, // <<<< TODO: SET ACTUAL WIDTH OF knight_static.png
-  height: 40, // <<<< TODO: SET ACTUAL HEIGHT OF knight_static.png
+  width: 75,
+  height: 75,
 };
 // Assuming knight_static.png is in src/assets/sprites/
-const staticPlayerImageUrl = new URL("../assets/sprites/knight_static.png", import.meta.url).href;
-// --- ---
-
+const staticPlayerImageUrl = new URL("/assets/images/sprites/knight_static.png", import.meta.url)
+  .href;
 // Helper function to get the 1-indexed grid row and column for a square ID
 // Path: Down -> Right -> Up -> Left (starting top-left at 0)
 // This function is crucial for both BoardSquare and staticPlayerMarker positioning
@@ -175,18 +174,18 @@ const bossImageUrl = computed(() => {
 
 <style scoped>
 .game-board-wrapper {
-  position: relative; /* For positioning the boss overlay */
-  display: inline-block; /* So it only takes the size of its content */
+  position: relative;
+  display: inline-block;
 }
 
 .game-board-perimeter {
   display: grid;
-  grid-template-columns: repeat(var(--board-cols, 6), 60px);
-  grid-template-rows: repeat(var(--board-rows, 6), 60px);
-  width: calc(var(--board-cols, 6) * 60px);
-  height: calc(var(--board-rows, 6) * 60px);
-  border: 3px solid saddlebrown;
-  position: relative; /* For static player marker positioning */
+  grid-template-columns: repeat(var(--board-cols, 6), 75px); /* 75px for new square size */
+  grid-template-rows: repeat(var(--board-rows, 6), 75px); /* 75px for new square size */
+  width: calc(var(--board-cols, 6) * 75px); /* 75px in width calculation */
+  height: calc(var(--board-rows, 6) * 75px); /* 75px in height calculation */
+  border: 3px solid saddlebrown; /* Thickness and color of border for the main board perimeter if desired */
+  position: relative;
   background-color: #f0e0c0;
 }
 
@@ -198,7 +197,6 @@ const bossImageUrl = computed(() => {
 .static-player-marker {
   object-fit: contain;
   image-rendering: pixelated;
-  /* zIndex and positioning are handled by inline style */
 }
 
 .boss-overlay-inside-board {
@@ -234,7 +232,7 @@ const bossImageUrl = computed(() => {
   background-color: rgba(0, 0, 0, 0.6);
   padding: 10px 20px;
   border-radius: 12px;
-  font-size: 1.1rem;
+  font-size: 1.2rem; /* Slightly increased font size for boss counters */
   text-align: center;
 }
 
@@ -253,7 +251,7 @@ const bossImageUrl = computed(() => {
   animation: bossEntrance 0.6s ease-out;
 }
 .boss-die-result {
-  font-size: 4rem;
+  font-size: 4.5rem; /* Increased font size for boss die result */
   font-weight: bold;
   color: white;
   margin-top: 10px;
