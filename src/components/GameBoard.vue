@@ -160,11 +160,15 @@ const bossImageUrl = computed(() => {
     <div v-if="gameStore.gamePhase === 'boss_encounter'" class="boss-overlay-inside-board">
       <div class="boss-wrapper animated-boss">
         <img
-          :src="`/assets/images/bosses/${gameStore.currentBoss?.image}`"
-          class="boss-image-inside"
-          alt="Boss"
-        />
+  v-if="bossImageUrl"
+  :src="bossImageUrl"
+  alt="Boss"
+  class="boss-image"
+/>
 
+
+
+<source>
         <!-- 🎲 Número del dado lanzado -->
         <div v-if="gameStore.bossLastRoll !== null" class="boss-die-result">
           🎲 {{ gameStore.bossLastRoll }}
@@ -278,4 +282,14 @@ const bossImageUrl = computed(() => {
     opacity: 1;
   }
 }
+
+.boss-image {
+  max-height: 60vh;
+  width: auto;
+  height: auto;
+  max-width: 90%;
+  display: block;
+  margin: 0 auto;
+}
+
 </style>
