@@ -1,4 +1,4 @@
-name: Test
+name: Test and Lint
 
 on:
   push:
@@ -10,7 +10,8 @@ env:
   STORE_PATH: ~/.pnpm-store
 
 jobs:
-  test:
+  test-and-lint:
+    name: Run Tests and Lint
     runs-on: ubuntu-latest
 
     steps:
@@ -40,8 +41,8 @@ jobs:
           pnpm install --no-frozen-lockfile
           pnpm add -D jsdom @vue/test-utils @testing-library/vue @testing-library/jest-dom
 
-      - name: Run tests
-        run: pnpm test:ci
-
       - name: Run lint check
         run: pnpm lint:ci
+
+      - name: Run tests
+        run: pnpm test:ci
