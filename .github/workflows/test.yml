@@ -36,7 +36,9 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm add -D jsdom @vue/test-utils @testing-library/vue
 
       - name: Run tests
         run: pnpm test:ci
