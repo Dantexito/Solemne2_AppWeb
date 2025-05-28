@@ -55,8 +55,8 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 8,
     minChoicePickDieSquares: 4,
     maxChoicePickDieSquares: 8,
-    bossName: "Comandante Goblin",
-    bossImage: "goblin_general.png",
+    bossName: "Comandante Orco",
+    bossImage: "orc_general.png",
     bossDefeatCondition: {
       diceThrows: 3,
       hp: 40,
