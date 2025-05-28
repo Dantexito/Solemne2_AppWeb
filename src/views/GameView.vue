@@ -46,7 +46,6 @@ function preloadImages(imagePaths) {
   });
 }
 
-
 const gameStore = useGameStore();
 const { isGameOver, gamePhase, choiceDetails, animationSpeedMultiplier } = storeToRefs(gameStore);
 
@@ -60,7 +59,6 @@ onMounted(() => {
   preloadImages(imagePathsToPreload);
   gameStore.initializeGame();
 });
-
 
 function handleRollNormalDice() {
   if (
@@ -120,12 +118,11 @@ function handleToggleSpeed() {
             <button
               @click="handleRollNormalDice"
               :disabled="
-  isGameOver ||
-  gameStore.isAnimating ||
-  (gamePhase !== 'boss_encounter' && gamePhase !== 'rolling') ||
-  (gamePhase === 'boss_encounter' && gameStore.remainingBossRolls <= 0)
-"
-
+                isGameOver ||
+                gameStore.isAnimating ||
+                (gamePhase !== 'boss_encounter' && gamePhase !== 'rolling') ||
+                (gamePhase === 'boss_encounter' && gameStore.remainingBossRolls <= 0)
+              "
               class="roll-button"
             >
               Roll Normal Die

@@ -60,7 +60,7 @@ const STAGE_CONFIGS = {
     bossDefeatCondition: {
       diceThrows: 3,
       hp: 40,
-      bribeCost: 120,
+      bribeCost: 70,
     },
   },
   4: {
@@ -80,7 +80,7 @@ const STAGE_CONFIGS = {
     bossDefeatCondition: {
       diceThrows: 3,
       hp: 50,
-      bribeCost: 180,
+      bribeCost: 100,
     },
   },
   5: {
@@ -417,6 +417,8 @@ export const useGameStore = defineStore("game", {
         this.remainingBossRolls--;
         this.totalRolls++;
         this.gameMessage = `Lanzaste un ${roll}. Quedan ${this.remainingBossRolls} intento(s).`;
+
+        this.applyBossDamage(roll);
 
         const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
 
@@ -975,6 +977,8 @@ export const useGameStore = defineStore("game", {
       this.currentDiceThrows.push(roll);
       this.totalRolls++;
       this.gameMessage = `Usaste un dado reservado y lanzaste un ${roll}.`;
+
+      this.applyBossDamage(roll);
 
       const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
 

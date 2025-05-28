@@ -14,15 +14,38 @@ Interactions:
 - Assets: Loads boss images dynamically and the static player marker image.
 --->
 <script setup>
-import { computed } from "vue";
+import { ref, watch, computed } from "vue";
 import { storeToRefs } from "pinia";
 import { useGameStore } from "../stores/game"; // Adjust path if needed
 import BoardSquare from "./BoardSquare.vue";
 
+const justTookDamage = ref(false);
+
+
+
 const gameStore = useGameStore();
 // Destructure reactive properties from the store
-const { boardSquares, boardRows, boardCols, playerPosition, gamePhase, currentBoss } =
-  storeToRefs(gameStore);
+const {
+  boardSquares,
+  boardRows,
+  boardCols,
+  playerPosition,
+  gamePhase,
+  currentBoss,
+  currentBossHP,
+  currentBossMaxHP,
+} = storeToRefs(gameStore);
+
+watch(currentBossHP, (newVal, oldVal) => {
+  if (oldVal != null && newVal < oldVal) {
+    console.log("daño!");
+    justTookDamage.value = true;
+    setTimeout(() => {
+      justTookDamage.value = false;
+    }, 300);
+  }
+});
+
 
 // --- Static Player Image Configuration (from Lucas branch) ---
 // IMPORTANT: Update width and height to the actual dimensions of your knight_static.png
@@ -157,18 +180,20 @@ const bossImageUrl = computed(() => {
       />
     </div>
 
-          <div v-if="gameStore.showGeneralRollAnimation" class="general-die-result">
-        🎲 {{ gameStore.lastGeneralRoll }}
-      </div>
+    <div v-if="gameStore.showGeneralRollAnimation" class="general-die-result">
+      🎲 {{ gameStore.lastGeneralRoll }}
+    </div>
 
     <div v-if="gameStore.gamePhase === 'boss_encounter'" class="boss-overlay-inside-board">
       <div class="boss-wrapper animated-boss">
         <h2 class="boss-name">{{ gameStore.currentBoss?.name }}</h2>
         <img v-if="bossImageUrl" :src="bossImageUrl" alt="Boss" class="boss-image" />
 
-        <p class="boss-hp-text">
-          ❤️ Vida del jefe: {{ gameStore.currentBossHP }} / {{ gameStore.currentBossMaxHP }}
+        <p class="boss-hp-text" :class="{ 'hp-damaged': justTookDamage }">
+          ❤️ Vida del jefe: {{ currentBossHP }} / {{ currentBossMaxHP }}
         </p>
+
+
 
         <button class="pay-boss-button" @click="gameStore.payToDefeatBoss">
           💰 Pagar {{ gameStore.currentBoss?.bribeCost || "??" }} monedas para derrotar al jefe
@@ -348,6 +373,10 @@ const bossImageUrl = computed(() => {
   z-index: 30;
   pointer-events: none;
 }
-
+.hp-damaged {
+  animation: flash-red 0.3s ease-in-out;
+  transform: scale(1.05);
+  text-shadow: 0 0 8px red;
+}
 
 </style>
