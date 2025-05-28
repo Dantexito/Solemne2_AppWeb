@@ -397,7 +397,7 @@ export const useGameStore = defineStore("game", {
         }`;
         console.log(
           `addReservedDie: Añadido ${signature}. Bolsa actual: ${this.reservedDice.length}`
-        );  
+        );
       } else {
         this.gameMessage = `🎒 Bolsa de dados llena (${this.maxDiceInBag})! No se añadió ${dieData.type}.`;
         console.warn("addReservedDie: Bolsa llena. Dado ignorado.");
@@ -429,13 +429,9 @@ export const useGameStore = defineStore("game", {
         }
 
         // Solo fallar si no alcanzaste y ya no puedes lanzar más dados
-        if (
-          this.remainingBossRolls === 0 &&
-          this.reservedDice.length === 0
-        ) {
+        if (this.remainingBossRolls === 0 && this.reservedDice.length === 0) {
           await this.failBossFight();
         }
-
 
         return;
       }
@@ -1000,18 +996,14 @@ export const useGameStore = defineStore("game", {
     },
 
     checkEndOfBossBattle() {
-  const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
+      const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
 
-  if (total >= this.currentBoss.hp) {
-    this.defeatBoss();
-  } else if (
-    this.remainingBossRolls === 0 &&
-    this.reservedDice.length === 0
-  ) {
-    this.failBossFight();
-  }
-},
-
+      if (total >= this.currentBoss.hp) {
+        this.defeatBoss();
+      } else if (this.remainingBossRolls === 0 && this.reservedDice.length === 0) {
+        this.failBossFight();
+      }
+    },
 
     async rollCustomDie(die) {
       // From MAIN

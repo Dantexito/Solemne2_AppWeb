@@ -21,8 +21,6 @@ import BoardSquare from "./BoardSquare.vue";
 
 const justTookDamage = ref(false);
 
-
-
 const gameStore = useGameStore();
 // Destructure reactive properties from the store
 const {
@@ -45,7 +43,6 @@ watch(currentBossHP, (newVal, oldVal) => {
     }, 300);
   }
 });
-
 
 // --- Static Player Image Configuration (from Lucas branch) ---
 // IMPORTANT: Update width and height to the actual dimensions of your knight_static.png
@@ -192,8 +189,6 @@ const bossImageUrl = computed(() => {
         <p class="boss-hp-text" :class="{ 'hp-damaged': justTookDamage }">
           ❤️ Vida del jefe: {{ currentBossHP }} / {{ currentBossMaxHP }}
         </p>
-
-
 
         <button class="pay-boss-button" @click="gameStore.payToDefeatBoss">
           💰 Pagar {{ gameStore.currentBoss?.bribeCost || "??" }} monedas para derrotar al jefe
@@ -378,5 +373,4 @@ const bossImageUrl = computed(() => {
   transform: scale(1.05);
   text-shadow: 0 0 8px red;
 }
-
 </style>

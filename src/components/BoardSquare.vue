@@ -100,6 +100,7 @@ const squareClasses = computed(() => ({
     :class="[
       square.baseType,
       square.currentEffectType,
+      squareClasses,
       { highlighted: isHighlighted, active: isPlayerCurrentlyOnThisSquare },
     ]"
   >
