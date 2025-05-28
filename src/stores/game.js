@@ -175,7 +175,7 @@ export const useGameStore = defineStore("game", {
   }),
 
   getters: {
-    totalBoardSquares(state) {
+    totalBoardSquares() {
       const config = this.currentStageConfig;
       if (!config || !config.rows || !config.cols) return 0;
       const R = config.rows;
@@ -183,7 +183,7 @@ export const useGameStore = defineStore("game", {
       if (R <= 1 || C <= 1) return R * C;
       return 2 * R + 2 * C - 4;
     },
-    cornerSquareIds(state) {
+    cornerSquareIds() {
       const config = this.currentStageConfig;
       if (!config || !config.rows || !config.cols || config.rows <= 1 || config.cols <= 1)
         return [];
@@ -191,7 +191,7 @@ export const useGameStore = defineStore("game", {
       const C = config.cols;
       return [0, R - 1, R - 1 + (C - 1), R - 1 + (C - 1) + (R - 1)];
     },
-    bottomRightCornerId(state) {
+    bottomRightCornerId() {
       const config = this.currentStageConfig;
       if (!config || !config.rows || !config.cols || config.rows <= 1 || config.cols <= 1)
         return -1;
@@ -290,7 +290,6 @@ export const useGameStore = defineStore("game", {
     },
 
     generateBoardLayout() {
-      const config = this.currentStageConfig;
       const totalSquares = this.totalBoardSquares;
       const corners = this.cornerSquareIds;
       const brCornerId = this.bottomRightCornerId;
@@ -696,19 +695,21 @@ export const useGameStore = defineStore("game", {
         effectAppliedMessage += ` Bad corner! Lost $20.`;
       }
       switch (square.currentEffectType) {
-        case "temp_bad_lap":
+        case "temp_bad_lap":{
           const penalty = square.effectDetails?.penalty || getRandomInt(5, 15) * this.playerStage;
           this.playerMoney -= penalty;
           effectAppliedMessage += ` Trap! -$${penalty}.`;
           break;
-        case "huge_money":
+        }
+        case "huge_money":{
           const hugeGain = square.effectDetails?.amount || this.currentHugeMoneyValue;
           this.playerMoney += hugeGain;
           effectAppliedMessage += ` Huge! +$${hugeGain}.`;
           square.currentEffectType = "none";
           square.effectDetails = null;
           break;
-        case "choice_dice_money":
+        }
+        case "choice_dice_money":{
           this.gamePhase = "awaiting_choice";
           let offeredDieInChoice;
           const rdc = Math.random();
@@ -737,7 +738,8 @@ export const useGameStore = defineStore("game", {
           };
           effectAppliedMessage += " " + this.choiceDetails.message;
           break;
-        case "choice_pick_die":
+        }
+        case "choice_pick_die":{
           this.gamePhase = "awaiting_choice";
           const dPool = [
             { type: DICE_TYPES.FIXED, value: 1 },
@@ -777,6 +779,7 @@ export const useGameStore = defineStore("game", {
           };
           effectAppliedMessage += " " + this.choiceDetails.message;
           break;
+        }
       }
       this.gameMessage = (this.gameMessage + " " + effectAppliedMessage).trim();
       console.log(

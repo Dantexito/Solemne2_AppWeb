@@ -28,7 +28,6 @@ const {
   boardRows,
   boardCols,
   playerPosition,
-  gamePhase,
   currentBoss,
   currentBossHP,
   currentBossMaxHP,

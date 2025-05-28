@@ -2,7 +2,7 @@
 <script setup>
 import SingleDieDisplay from "./SingleDieDisplay.vue"; // Make sure path is correct
 
-const props = defineProps({
+defineProps({
   details: {
     type: Object,
     required: true,

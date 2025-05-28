@@ -5,7 +5,7 @@ import SingleDieDisplay from "./SingleDieDisplay.vue";
 
 const gameStore = useGameStore();
 // Destructure maxDiceInBag (or the getter diceBagCapacityDisplay)
-const { reservedDice, gamePhase, isGameOver, diceBagCapacityDisplay } = storeToRefs(gameStore);
+const { reservedDice, diceBagCapacityDisplay } = storeToRefs(gameStore);
 
 function useReservedDie(index) {
   const die = gameStore.reservedDice[index];

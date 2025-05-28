@@ -47,7 +47,7 @@ function preloadImages(imagePaths) {
 }
 
 const gameStore = useGameStore();
-const { isGameOver, gamePhase, choiceDetails, animationSpeedMultiplier } = storeToRefs(gameStore);
+const { isGameOver, gamePhase, choiceDetails } = storeToRefs(gameStore);
 
 // URL for the static player image in the display panel
 const staticPlayerDisplayImageUrl = new URL(
