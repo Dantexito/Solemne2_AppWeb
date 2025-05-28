@@ -20,7 +20,7 @@ const STAGE_CONFIGS = {
     bossDefeatCondition: {
       diceThrows: 3,
       hp: 15,
-      bribeCost: 30,
+      bribeCost: 40,
     },
   },
   2: {
@@ -40,6 +40,7 @@ const STAGE_CONFIGS = {
     bossDefeatCondition: {
       diceThrows: 3,
       hp: 30,
+      bribeCost: 80,
     },
   },
   3: {
@@ -54,11 +55,12 @@ const STAGE_CONFIGS = {
     maxChoiceDiceMoneySquares: 8,
     minChoicePickDieSquares: 4,
     maxChoicePickDieSquares: 8,
-    bossName: "Comandante Orco",
-    bossImage: "orc_general.png",
+    bossName: "Comandante Goblin",
+    bossImage: "goblin_general.png",
     bossDefeatCondition: {
       diceThrows: 3,
       hp: 40,
+      bribeCost: 120,
     },
   },
   4: {
@@ -78,6 +80,7 @@ const STAGE_CONFIGS = {
     bossDefeatCondition: {
       diceThrows: 3,
       hp: 50,
+      bribeCost: 180,
     },
   },
   5: {
@@ -97,6 +100,7 @@ const STAGE_CONFIGS = {
     bossDefeatCondition: {
       diceThrows: 3,
       hp: 70,
+      bribeCost: 200,
     },
   },
 };
@@ -493,13 +497,12 @@ export const useGameStore = defineStore("game", {
     },
 
     showDieRoll(number) {
-  this.lastGeneralRoll = number;
-  this.showGeneralRollAnimation = true;
-  setTimeout(() => {
-    this.showGeneralRollAnimation = false;
-  }, 1000); // dura lo mismo que `pop-in`
-},
-
+      this.lastGeneralRoll = number;
+      this.showGeneralRollAnimation = true;
+      setTimeout(() => {
+        this.showGeneralRollAnimation = false;
+      }, 1000); // dura lo mismo que `pop-in`
+    },
 
     async movePlayer(steps) {
       this.gamePhase = "player_moving_animation"; // Player is now "walking"
