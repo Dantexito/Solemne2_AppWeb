@@ -120,11 +120,12 @@ function handleToggleSpeed() {
             <button
               @click="handleRollNormalDice"
               :disabled="
-                isGameOver ||
-                gameStore.isAnimating ||
-                (gamePhase !== 'rolling' &&
-                  (gamePhase !== 'boss_encounter' || gameStore.remainingBossRolls <= 0))
-              "
+  isGameOver ||
+  gameStore.isAnimating ||
+  (gamePhase !== 'boss_encounter' && gamePhase !== 'rolling') ||
+  (gamePhase === 'boss_encounter' && gameStore.remainingBossRolls <= 0)
+"
+
               class="roll-button"
             >
               Roll Normal Die

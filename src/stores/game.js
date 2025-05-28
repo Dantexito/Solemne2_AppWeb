@@ -393,7 +393,7 @@ export const useGameStore = defineStore("game", {
         }`;
         console.log(
           `addReservedDie: Añadido ${signature}. Bolsa actual: ${this.reservedDice.length}`
-        );
+        );  
       } else {
         this.gameMessage = `🎒 Bolsa de dados llena (${this.maxDiceInBag})! No se añadió ${dieData.type}.`;
         console.warn("addReservedDie: Bolsa llena. Dado ignorado.");
@@ -422,10 +422,14 @@ export const useGameStore = defineStore("game", {
           return;
         }
 
-        // Solo fallar si no alcanzaste y se acabaron los intentos
-        if (this.remainingBossRolls === 0) {
+        // Solo fallar si no alcanzaste y ya no puedes lanzar más dados
+        if (
+          this.remainingBossRolls === 0 &&
+          this.reservedDice.length === 0
+        ) {
           await this.failBossFight();
         }
+
 
         return;
       }
@@ -954,7 +958,6 @@ export const useGameStore = defineStore("game", {
     async rollDiceForBoss(die) {
       if (this.gamePhase !== "boss_encounter") return;
 
-      // 🔻 Elimina el dado de la reserva
       const dieIndex = this.reservedDice.indexOf(die);
       if (dieIndex !== -1) {
         this.reservedDice.splice(dieIndex, 1);
@@ -979,10 +982,29 @@ export const useGameStore = defineStore("game", {
       }
 
       // Solo falla si se usaron todos los dados normales y aún no alcanza
-      if (this.remainingBossRolls === 0) {
+      // ✅ Revisar si ya no puede lanzar más dados (ni normales ni de reserva)
+      if (
+        this.gamePhase === "boss_encounter" &&
+        this.remainingBossRolls === 0 &&
+        this.reservedDice.length === 0
+      ) {
         await this.failBossFight();
       }
     },
+
+    checkEndOfBossBattle() {
+  const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
+
+  if (total >= this.currentBoss.hp) {
+    this.defeatBoss();
+  } else if (
+    this.remainingBossRolls === 0 &&
+    this.reservedDice.length === 0
+  ) {
+    this.failBossFight();
+  }
+},
+
 
     async rollCustomDie(die) {
       // From MAIN
