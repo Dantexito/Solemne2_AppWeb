@@ -144,7 +144,7 @@ const bossImageUrl = computed(() => {
     // Assuming boss images are in public/assets/images/bosses/
     // Vite serves from `public` directory at the root.
     // If images are in `src/assets`, you'd use `new URL(...)`
-    return `/assets/images/bosses/${currentBoss.value.image}`;
+    return `${import.meta.env.BASE_URL}assets/images/bosses/${currentBoss.value.image}`;
   }
   return ""; // Or a placeholder boss image
 });

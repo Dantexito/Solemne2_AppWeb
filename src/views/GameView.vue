@@ -10,33 +10,33 @@ import SummaryModal from "@/components/SummaryModal.vue";
 
 const imagePathsToPreload = [
   // Dados Normales
-  "/assets/images/dice/die_d6.png",
-  "/assets/images/dice/die_fixed_1.png",
-  "/assets/images/dice/die_fixed_2.png",
-  "/assets/images/dice/die_fixed_3.png",
-  "/assets/images/dice/die_fixed_4.png",
-  "/assets/images/dice/die_fixed_5.png",
-  "/assets/images/dice/die_fixed_6.png",
+  `${import.meta.env.BASE_URL}assets/images/dice/die_d6.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_1.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_2.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_3.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_4.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_5.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_6.png`,
 
   // Dados Especiales
-  "/assets/images/dice/die_d20.png",
+  `${import.meta.env.BASE_URL}assets/images/dice/die_d20.png`,
 
   // Dados Reversa
-  "/assets/images/dice/die_d6_reverse.png",
-  "/assets/images/dice/die_fixed_reverse_1.png",
-  "/assets/images/dice/die_fixed_reverse_2.png",
-  "/assets/images/dice/die_fixed_reverse_3.png",
-  "/assets/images/dice/die_fixed_reverse_4.png",
-  "/assets/images/dice/die_fixed_reverse_5.png",
-  "/assets/images/dice/die_fixed_reverse_6.png",
+  `${import.meta.env.BASE_URL}assets/images/dice/die_d6_reverse.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_reverse_1.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_reverse_2.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_reverse_3.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_reverse_4.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_reverse_5.png`,
+  `${import.meta.env.BASE_URL}assets/images/dice/die_fixed_reverse_6.png`,
 
   // Jefes
-  "/assets/images/bosses/dark_godcat.webp",
-  "/assets/images/bosses/dragon_treasurer.png",
-  "/assets/images/bosses/goblin_general.png",
-  "/assets/images/bosses/greedy_goblin_king.webp",
-  "/assets/images/bosses/orc_general.png",
-  "/assets/images/bosses/tax_collector.png",
+  `${import.meta.env.BASE_URL}assets/images/bosses/dark_godcat.webp`,
+  `${import.meta.env.BASE_URL}assets/images/bosses/dragon_treasurer.png`,
+  `${import.meta.env.BASE_URL}assets/images/bosses/goblin_general.png`,
+  `${import.meta.env.BASE_URL}assets/images/bosses/greedy_goblin_king.webp`,
+  `${import.meta.env.BASE_URL}assets/images/bosses/orc_general.png`,
+  `${import.meta.env.BASE_URL}assets/images/bosses/tax_collector.png`,
 ];
 
 function preloadImages(imagePaths) {

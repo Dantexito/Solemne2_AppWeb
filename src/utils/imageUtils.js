@@ -49,5 +49,6 @@ export function generateDieImageFilename(die, isFromLastRoll = false) {
  */
 export function getDieImageUrl(filename) {
   if (!filename) return null;
-  return `/assets/images/dice/${filename}`;
+  return `${import.meta.env.BASE_URL}assets/images/dice/${filename}`;
+
 }
