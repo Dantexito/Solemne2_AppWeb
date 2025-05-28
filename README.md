@@ -1,8 +1,8 @@
 # Solemne2_AppWeb
 
 ### Bases del juego
-Este juego va consistir de un tablero cuadrádo 6x6 dónde el personaje se mueve a lo largo de las aristas del cuadrado.
 
+Este juego va consistir de un tablero cuadrádo 6x6 dónde el personaje se mueve a lo largo de las aristas del cuadrado.
 
 # .
 
@@ -40,4 +40,12 @@ pnpm build
 pnpm lint
 ```
 
-alol so
+### DOCKER
+
+```sh
+docker build -t dice_or_die .
+```
+
+```sh
+docker run -d -p 8080:80 --name dice_or_die_app dice_or_die
+```
