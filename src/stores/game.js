@@ -939,11 +939,7 @@ export const useGameStore = defineStore("game", {
 
     applyBossDamage(totalDiceValue) {
       if (this.currentBossHP == null) return;
-
       this.currentBossHP -= totalDiceValue;
-      if (this.currentBossHP <= 0) {
-        this.defeatBoss(); // Aquí puedes cambiar de fase, mostrar victoria, etc.
-      }
     },
 
     payToDefeatBoss() {
