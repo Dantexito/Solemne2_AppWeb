@@ -1,51 +1,108 @@
-# Solemne2_AppWeb
+# 🎲 Dice or Die
 
-### Bases del juego
+Un juego de mesa digital donde debes avanzar por el tablero, recolectar dados especiales y enfrentarte a jefes. ¿Usarás la fuerza o el soborno para vencer?
 
-Este juego va consistir de un tablero cuadrádo 6x6 dónde el personaje se mueve a lo largo de las aristas del cuadrado.
+## 📝 Descripción
 
-# .
+Dice or Die es un juego de mesa por turnos donde el jugador debe:
 
-This template should help get you started developing with Vue 3 in Vite.
+- Avanzar por el tablero usando dados
+- Recolectar dados especiales con diferentes efectos
+- Ganar dinero en casillas especiales
+- Enfrentarse a jefes al final de cada etapa
+- Decidir entre derrotar a los jefes en combate o sobornarlos
 
-## Recommended IDE Setup
+## 🚀 Tecnologías Utilizadas
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- Vue.js 3
+- Pinia (manejo de estado)
+- Vite
+- Docker
+- GitHub Actions (CI/CD)
+- Vitest (Testing)
+- Eslint (Linter)
 
-## Customize configuration
+## 🛠️ Instalación y Ejecución Local
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+### Prerrequisitos
 
-## Project Setup
+- Node.js v20 o superior
+- pnpm (recomendado) o npm
 
-```sh
+### Pasos de Instalación
+
+1. Clonar el repositorio:
+
+```bash
+git clone https://github.com/Dantexito/Solemne2_AppWeb.git
+cd Solemne2_AppWeb
+```
+
+2. Instalar dependencias:
+
+```bash
 pnpm install
 ```
 
-### Compile and Hot-Reload for Development
+3. Ejecutar en modo desarrollo:
 
-```sh
+```bash
 pnpm dev
 ```
 
-### Compile and Minify for Production
+4. Ejecutar pruebas:
 
-```sh
+```bash
+pnpm test
+```
+
+5. Construir para producción:
+
+```bash
 pnpm build
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+## 🐳 Ejecución con Docker
 
-```sh
-pnpm lint
+### Usando Docker Hub
+
+```bash
+docker pull lbrowni/dice_or_die:latest
+docker run -p 8080:80 lbrowni/dice_or_die:latest
 ```
 
-### DOCKER
+### Construcción Local
 
-```sh
+1. Construir la imagen:
+
+```bash
 docker build -t dice_or_die .
 ```
 
-```sh
-docker run -d -p 8080:80 --name dice_or_die_app dice_or_die
+2. Ejecutar el contenedor:
+
+```bash
+docker run -p 8080:80 dice_or_die
 ```
+
+## 🔗 Enlaces
+
+- [Docker Hub](https://hub.docker.com/r/lbrowni/dice_or_die)
+- [GitHub Repository](https://github.com/Dantexito/Solemne2_AppWeb)
+
+## ✅ Tests
+
+El proyecto incluye pruebas unitarias usando Vitest. Para ejecutar las pruebas:
+
+```bash
+# Ejecutar pruebas
+pnpm test
+```
+
+## 👥 Autores
+
+- Nombre: Lucas Brown Ibieta
+- GitHub: [@LBrownI](https://github.com/LBrownI)
+
+- Nombre: Dante Quezada Poblete
+- GitHub: [@Dantexito](https://github.com/Dantexito)

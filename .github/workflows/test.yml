@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: |
           pnpm install --no-frozen-lockfile
-          pnpm add -D jsdom @vue/test-utils @testing-library/vue
+          pnpm add -D jsdom @vue/test-utils @testing-library/vue @testing-library/jest-dom
 
       - name: Run tests
         run: pnpm test:ci
