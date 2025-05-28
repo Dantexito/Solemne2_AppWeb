@@ -30,5 +30,3 @@ jobs:
           file: ./Dockerfile # Explicitly specify the Dockerfile location
           push: true # Actually push the image to Docker Hub
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/dice_or_die:latest
-          cache-from: type=gha # Enable GitHub Actions cache for Docker layers
-          cache-to: type=gha,mode=max # Write to GitHub Actions cache
