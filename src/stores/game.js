@@ -664,6 +664,7 @@ export const useGameStore = defineStore("game", {
       this.isGameOver = false;
       this.showSummaryModal = false;
       this.currentStageConfig = STAGE_CONFIGS[1];
+      this.setupStage(); // Reinitialize the stage
     },
 
     handleSquareLanding() {
