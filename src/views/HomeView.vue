@@ -3,8 +3,8 @@
   <div class="home-container">
     <h1>🎲 Dice OR DIE 🎲</h1>
     <nav>
-      <router-link to="/game" class="nav-link">Play Game</router-link>
-      <router-link to="/assets" class="nav-link">View Game Assets</router-link>
+      <router-link to="/game" class="nav-link">Jugar</router-link>
+      <router-link to="/assets" class="nav-link">Ver Assets</router-link>
     </nav>
   </div>
 </template>

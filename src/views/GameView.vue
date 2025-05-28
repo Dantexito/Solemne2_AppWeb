@@ -102,7 +102,7 @@ function handleToggleSpeed() {
             alt="Player Knight"
             class="large-static-player-image"
           />
-          <h3 class="player-name">The Knight</h3>
+          <h3 class="player-name">El Caballero</h3>
         </div>
         <GameInfo class="game-info-content" />
       </div>
@@ -125,12 +125,12 @@ function handleToggleSpeed() {
               "
               class="roll-button"
             >
-              Roll Normal Die
+              Lanzar dado
             </button>
           </div>
           <div class="speed-control-container">
             <button @click="handleToggleSpeed" class="speed-button">
-              Speed: {{ currentSpeedText }}
+              Velocidad de juego: {{ currentSpeedText }}
             </button>
           </div>
         </div>
