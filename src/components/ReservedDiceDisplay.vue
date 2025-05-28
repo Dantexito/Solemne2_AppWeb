@@ -22,7 +22,7 @@ function useReservedDie(index) {
 
 <template>
   <div class="reserved-dice-container">
-    <h3>Dice in Bag ({{ diceBagCapacityDisplay }})</h3>
+    <h3>Dados en la bolsa ({{ diceBagCapacityDisplay }})</h3>
     <p v-if="reservedDice.length === 0" class="no-dice-text">None</p>
     <div class="dice-grid">
       <SingleDieDisplay
