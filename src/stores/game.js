@@ -105,6 +105,8 @@ const STAGE_CONFIGS = {
   },
 };
 
+export { STAGE_CONFIGS };
+
 const MAX_RESERVED_DICE = 15;
 const MAX_STAGES = Object.keys(STAGE_CONFIGS).length;
 const HUGE_MONEY_AMOUNT_BASE = 10;
@@ -170,6 +172,8 @@ export const useGameStore = defineStore("game", {
     totalRolls: 0, // Cuenta cuántos dados ha lanzado el jugador en total
     diceObtained: 0, // Cuenta cuántos dados ha ganado el jugador
     bossesDefeated: 0, // Número total de jefes derrotados
+    perfectBossDefeats: 0, // Número de jefes derrotados con daño exacto
+    bribesBosses: 0, // Número de jefes sobornados
     showSummaryModal: false, // Para mostrar el resumen visual al final del juego
     currentStageConfig: STAGE_CONFIGS[1], // Configuración del stage actual
   }),
@@ -655,6 +659,8 @@ export const useGameStore = defineStore("game", {
       this.totalRolls = 0;
       this.diceObtained = 0;
       this.bossesDefeated = 0;
+      this.perfectBossDefeats = 0;
+      this.bribesBosses = 0;
       this.reservedDice = [];
       this.lastDiceRoll = null;
       this.currentDiceThrows = [];
@@ -950,7 +956,9 @@ export const useGameStore = defineStore("game", {
 
       if (currentMoney >= bribe) {
         this.playerMoney -= bribe;
-        this.defeatBoss();
+        this.bribesBosses++;
+        this.gameMessage = `Has sobornado a ${this.currentBoss.name} por $${bribe}`;
+        this.defeatBoss(true);
       } else {
         alert("No tienes suficiente dinero para pagarle al jefe.");
       }
@@ -964,7 +972,30 @@ export const useGameStore = defineStore("game", {
         this.reservedDice.splice(dieIndex, 1);
       }
 
-      const roll = die.value || Math.ceil(Math.random() * 6);
+      let roll;
+      // Manejar cada tipo de dado específicamente
+      switch (die.type) {
+        case DICE_TYPES.D20:
+          roll = getRandomInt(1, 20);
+          this.gameMessage = `Usaste un dado D20 y obtuviste un ${roll}!`;
+          break;
+        case DICE_TYPES.FIXED:
+          roll = die.value;
+          this.gameMessage = `Usaste un dado fijo de ${roll}`;
+          break;
+        case DICE_TYPES.REVERSE_FIXED:
+          roll = die.value;
+          this.gameMessage = `Usaste un dado fijo inverso de ${roll}`;
+          break;
+        case DICE_TYPES.REVERSE_RANDOM:
+          roll = getRandomInt(1, 6);
+          this.gameMessage = `Usaste un dado aleatorio inverso y obtuviste un ${roll}`;
+          break;
+        default: // DICE_TYPES.NORMAL
+          roll = getRandomInt(1, 6);
+          this.gameMessage = `Usaste un dado normal y obtuviste un ${roll}`;
+      }
+
       this.bossLastRoll = roll;
       setTimeout(() => {
         this.bossLastRoll = null;
@@ -972,11 +1003,11 @@ export const useGameStore = defineStore("game", {
 
       this.currentDiceThrows.push(roll);
       this.totalRolls++;
-      this.gameMessage = `Usaste un dado reservado y lanzaste un ${roll}.`;
 
       this.applyBossDamage(roll);
 
       const total = this.currentDiceThrows.reduce((a, b) => a + b, 0);
+      this.gameMessage += `. Daño total: ${total}/${this.currentBoss.hp}`;
 
       // ✅ Si ya alcanza el total, no esperar más
       if (total >= this.currentBoss.hp) {
@@ -1027,9 +1058,19 @@ export const useGameStore = defineStore("game", {
       return result;
     },
 
-    async defeatBoss() {
-      this.bossesDefeated++;
-      this.gameMessage = "¡Has derrotado al jefe!";
+    async defeatBoss(wasBribed = false) {
+      if (!wasBribed) {
+        this.bossesDefeated++;
+        // Check if this was a perfect defeat
+        const totalDamage = this.currentDiceThrows.reduce((a, b) => a + b, 0);
+        if (totalDamage === this.currentBoss.hp) {
+          this.perfectBossDefeats++;
+          this.gameMessage = "¡Has derrotado al jefe con daño exacto! ¡Perfecto!";
+        } else {
+          this.gameMessage = "¡Has derrotado al jefe!";
+        }
+      }
+
       await new Promise((res) => setTimeout(res, 500));
 
       this.playerStage++;

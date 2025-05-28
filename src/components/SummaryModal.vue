@@ -1,11 +1,36 @@
 <script setup>
 import { useGameStore } from "@/stores/game";
+import { STAGE_CONFIGS } from "@/stores/game";
 const gameStore = useGameStore();
 
 const money = gameStore.playerMoney;
 const rolls = gameStore.totalRolls;
 const dice = gameStore.diceObtained;
 const bosses = gameStore.bossesDefeated;
+const perfectBosses = gameStore.perfectBossDefeats;
+const bribedBosses = gameStore.bribesBosses;
+const totalBosses = Object.keys(STAGE_CONFIGS).length;
+
+function getEnding() {
+  if (bribedBosses === totalBosses) {
+    return "💰 Dejaste que el dinero te corrompiera... ¡El poder del soborno te consumió!";
+  } else if (bribedBosses > bosses) {
+    return "🤝 Preferiste negociar antes que pelear... ¿Habrá sido lo correcto?";
+  } else if (bosses > bribedBosses) {
+    if (perfectBosses > 0) {
+      return "⚔️ Un guerrero habilidoso que no teme enfrentar a sus enemigos.";
+    } else {
+      return "🗡️ Derrotaste a tus enemigos con valentía, aunque no siempre con precisión.";
+    }
+  } else if (bosses === totalBosses) {
+    if (perfectBosses === totalBosses) {
+      return "👑 ¡LEYENDA! Derrotaste a todos los jefes con precisión perfecta. ¡Increíble!";
+    } else {
+      return "🏆 ¡Un verdadero campeón! Derrotaste a todos los jefes sin recurrir a sobornos.";
+    }
+  }
+  return "🎮 El viaje ha terminado... ¿Pero fue este el mejor camino?";
+}
 
 function restartGame() {
   gameStore.resetGame();
@@ -20,8 +45,11 @@ function restartGame() {
         <li>💰 Dinero reunido: ${{ money }}</li>
         <li>🎲 Dados lanzados: {{ rolls }}</li>
         <li>🎁 Dados obtenidos: {{ dice }}</li>
-        <li>🧟‍♂️ Jefes derrotados: {{ bosses }}</li>
+        <li>⚔️ Jefes derrotados: {{ bosses }}</li>
+        <li>✨ Jefes derrotados perfectamente: {{ perfectBosses }}</li>
+        <li>💸 Jefes sobornados: {{ bribedBosses }}</li>
       </ul>
+      <p class="ending-message">{{ getEnding() }}</p>
       <button @click="restartGame">Reiniciar Partida</button>
     </div>
   </div>
@@ -48,6 +76,16 @@ function restartGame() {
   text-align: center;
   width: 300px;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.ending-message {
+  margin: 20px 0;
+  font-style: italic;
+  color: #2c3e50;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 button {
