@@ -65,8 +65,8 @@ const STAGE_CONFIGS = {
   },
   4: {
     // 12x12
-    rows: 12,
-    cols: 12,
+    rows: 10,
+    cols: 14,
     moneyMultiplier: 2,
     lapsToComplete: 3,
     minBadSquares: 4,
@@ -85,8 +85,8 @@ const STAGE_CONFIGS = {
   },
   5: {
     // 12x12
-    rows: 12,
-    cols: 12,
+    rows: 10,
+    cols: 14,
     moneyMultiplier: 2.5,
     lapsToComplete: 3,
     minBadSquares: 4,
@@ -696,13 +696,13 @@ export const useGameStore = defineStore("game", {
         effectAppliedMessage += ` Bad corner! Lost $20.`;
       }
       switch (square.currentEffectType) {
-        case "temp_bad_lap":{
+        case "temp_bad_lap": {
           const penalty = square.effectDetails?.penalty || getRandomInt(5, 15) * this.playerStage;
           this.playerMoney -= penalty;
           effectAppliedMessage += ` Trap! -$${penalty}.`;
           break;
         }
-        case "huge_money":{
+        case "huge_money": {
           const hugeGain = square.effectDetails?.amount || this.currentHugeMoneyValue;
           this.playerMoney += hugeGain;
           effectAppliedMessage += ` Huge! +$${hugeGain}.`;
@@ -710,7 +710,7 @@ export const useGameStore = defineStore("game", {
           square.effectDetails = null;
           break;
         }
-        case "choice_dice_money":{
+        case "choice_dice_money": {
           this.gamePhase = "awaiting_choice";
           let offeredDieInChoice;
           const rdc = Math.random();
@@ -740,7 +740,7 @@ export const useGameStore = defineStore("game", {
           effectAppliedMessage += " " + this.choiceDetails.message;
           break;
         }
-        case "choice_pick_die":{
+        case "choice_pick_die": {
           this.gamePhase = "awaiting_choice";
           const dPool = [
             { type: DICE_TYPES.FIXED, value: 1 },
