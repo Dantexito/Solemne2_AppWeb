@@ -41,12 +41,12 @@ function restartGame() {
   <div class="modal-backdrop">
     <div class="modal-content">
       <h2>🏁 Resumen de la Partida</h2>
-      <ul>
+      <ul class="summary-list">
         <li>💰 Dinero reunido: ${{ money }}</li>
         <li>🎲 Dados lanzados: {{ rolls }}</li>
         <li>🎁 Dados obtenidos: {{ dice }}</li>
         <li>⚔️ Jefes derrotados: {{ bosses }}</li>
-        <li>✨ Jefes derrotados perfectamente: {{ perfectBosses }}</li>
+        <li>✨ Derrotas perfectas: {{ perfectBosses }}</li>
         <li>💸 Jefes sobornados: {{ bribedBosses }}</li>
       </ul>
       <p class="ending-message">{{ getEnding() }}</p>
@@ -76,6 +76,19 @@ function restartGame() {
   text-align: center;
   width: 300px;
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.summary-list {
+  list-style-type: none; /* Removes the bullet points */
+  padding-left: 0; /* Removes default left padding for lists */
+  margin-top: 15px; /* Optional: add some space above the list */
+  margin-bottom: 15px; /* Optional: add some space below the list */
+}
+
+.summary-list li {
+  margin-bottom: 8px; /* Optional: adds space between list items */
+  text-align: center; /* Optional: if you want items aligned to the left within the centered modal content */
+  /* Remove or adjust if you prefer them centered like the rest of .modal-content */
 }
 
 .ending-message {
