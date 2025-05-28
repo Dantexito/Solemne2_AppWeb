@@ -1035,13 +1035,14 @@ export const useGameStore = defineStore("game", {
       this.gameMessage = "¡Has derrotado al jefe!";
       await new Promise((res) => setTimeout(res, 500));
 
-      if (this.playerStage >= Object.keys(STAGE_CONFIGS).length) {
+      this.playerStage++;
+
+      if (this.playerStage > Object.keys(STAGE_CONFIGS).length) {
         this.isGameOver = true;
         this.showSummaryModal = true;
         return;
       }
 
-      this.playerStage++;
       this.playerLap = 0;
       this.currentDiceThrows = [];
       this.remainingBossRolls = 0;
